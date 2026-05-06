@@ -13,7 +13,7 @@ app.use('*', cors())
 
 app.get('/tables/consultations', async (c) => {
   const { results } = await c.env.DB.prepare(
-    'SELECT * FROM consultations ORDER BY apply_date DESC'
+    'SELECT * FROM ll_consultations ORDER BY apply_date DESC'
   ).all()
   return c.json(results)
 })
@@ -23,7 +23,7 @@ app.post('/tables/consultations', async (c) => {
   const now  = new Date().toISOString()
 
   const r = await c.env.DB.prepare(`
-    INSERT INTO consultations (
+    INSERT INTO ll_consultations (
       name, phone, birthdate, job,
       monthly_income, monthly_living, monthly_saving, saving_method,
       monthly_insurance, has_emergency_fund, has_retirement_plan,
@@ -75,13 +75,13 @@ app.patch('/tables/consultations/:id', async (c) => {
   const body = await c.req.json()
   const fields = Object.keys(body).map(k => `${k} = ?`).join(', ')
   const values = Object.values(body)
-  await c.env.DB.prepare(`UPDATE consultations SET ${fields} WHERE id = ?`)
+  await c.env.DB.prepare(`UPDATE ll_consultations SET ${fields} WHERE id = ?`)
     .bind(...values, id).run()
   return c.json({ ok: true })
 })
 
 app.delete('/tables/consultations/:id', async (c) => {
-  await c.env.DB.prepare('DELETE FROM consultations WHERE id = ?')
+  await c.env.DB.prepare('DELETE FROM ll_consultations WHERE id = ?')
     .bind(c.req.param('id')).run()
   return c.json({ ok: true })
 })
@@ -90,7 +90,7 @@ app.delete('/tables/consultations/:id', async (c) => {
 
 app.get('/tables/staff', async (c) => {
   const { results } = await c.env.DB.prepare(
-    'SELECT * FROM staff ORDER BY name'
+    'SELECT * FROM ll_staff ORDER BY name'
   ).all()
   return c.json(results)
 })
@@ -99,7 +99,7 @@ app.post('/tables/staff', async (c) => {
   const body = await c.req.json()
   const now  = new Date().toISOString()
   const r = await c.env.DB.prepare(
-    'INSERT INTO staff (name, active, created_at) VALUES (?,?,?)'
+    'INSERT INTO ll_staff (name, active, created_at) VALUES (?,?,?)'
   ).bind(body.name, 1, now).run()
   return c.json({ id: r.meta.last_row_id, ok: true })
 })
@@ -109,13 +109,13 @@ app.patch('/tables/staff/:id', async (c) => {
   const body = await c.req.json()
   const fields = Object.keys(body).map(k => `${k} = ?`).join(', ')
   const values = Object.values(body)
-  await c.env.DB.prepare(`UPDATE staff SET ${fields} WHERE id = ?`)
+  await c.env.DB.prepare(`UPDATE ll_staff SET ${fields} WHERE id = ?`)
     .bind(...values, id).run()
   return c.json({ ok: true })
 })
 
 app.delete('/tables/staff/:id', async (c) => {
-  await c.env.DB.prepare('DELETE FROM staff WHERE id = ?')
+  await c.env.DB.prepare('DELETE FROM ll_staff WHERE id = ?')
     .bind(c.req.param('id')).run()
   return c.json({ ok: true })
 })
@@ -124,7 +124,7 @@ app.delete('/tables/staff/:id', async (c) => {
 
 app.get('/tables/site_settings', async (c) => {
   const { results } = await c.env.DB.prepare(
-    'SELECT * FROM site_settings'
+    'SELECT * FROM ll_site_settings'
   ).all()
   return c.json(results)
 })
@@ -133,15 +133,15 @@ app.put('/tables/site_settings', async (c) => {
   const items: { id: string; value: string; label: string }[] = await c.req.json()
   for (const item of items) {
     const exists = await c.env.DB.prepare(
-      'SELECT id FROM site_settings WHERE id = ?'
+      'SELECT id FROM ll_site_settings WHERE id = ?'
     ).bind(item.id).first()
     if (exists) {
       await c.env.DB.prepare(
-        'UPDATE site_settings SET value = ?, label = ? WHERE id = ?'
+        'UPDATE ll_site_settings SET value = ?, label = ? WHERE id = ?'
       ).bind(item.value, item.label, item.id).run()
     } else {
       await c.env.DB.prepare(
-        'INSERT INTO site_settings (id, value, label) VALUES (?,?,?)'
+        'INSERT INTO ll_site_settings (id, value, label) VALUES (?,?,?)'
       ).bind(item.id, item.value, item.label).run()
     }
   }
