@@ -32,12 +32,42 @@ const state = {
 ;(async function loadSettings() {
   try {
     const res  = await fetch('/tables/site_settings')
+    if (!res.ok) return
     const data = await res.json()
-    const notice = data.find(d => d.id === 'footer_notice')
-    if (notice && notice.value) {
-      document.getElementById('footer-notice').innerHTML =
-        notice.value.replace(/\n/g, '<br/>')
+
+    // 헬퍼: id로 값 찾기
+    const get = (key) => {
+      const item = data.find(d => d.id === key || d.copyid === key)
+      return item ? (item.value || '') : ''
     }
+
+    // ① 하단 고지문구 (관리자 > 사이트설정 > 하단 고지문구)
+    const noticeEl = document.getElementById('footer-notice')
+    if (noticeEl) {
+      const val = get('footer_notice')
+      noticeEl.innerHTML = val.trim()
+        ? val.replace(/\n/g, '<br/>')
+        : '라이프랩 LIFE LAB | 금융소비자보호법 준수'
+    }
+
+    // ② 준법감시 문구
+    const compEl = document.getElementById('compliance-text')
+    if (compEl) {
+      const val = get('compliance_text')
+      if (val.trim()) compEl.textContent = val
+    }
+
+    // ③ 광고심의 정보
+    const adEl = document.getElementById('footer-ad-review')
+    if (adEl) {
+      const no   = get('ad_review_no')
+      const date = get('ad_review_date')
+      const org  = get('ad_review_org')
+      if (no || date || org) {
+        adEl.textContent = `광고심의필 제${no}호 | 심의일자: ${date} | 심의기관: ${org}`
+      }
+    }
+
   } catch(e) { /* silent */ }
 })()
 

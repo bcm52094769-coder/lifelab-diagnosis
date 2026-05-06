@@ -728,9 +728,30 @@ textarea { resize: vertical; min-height: 80px; line-height: 1.6; }
   background: var(--navy);
   color: rgba(255,255,255,.5);
   text-align: center;
-  padding: 28px 20px;
+  padding: 32px 20px;
   font-size: .8rem;
-  line-height: 1.7;
+  line-height: 1.8;
+}
+.footer-inner {
+  max-width: 800px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.footer-notice {
+  color: rgba(255,255,255,.75);
+  font-size: .85rem;
+  font-weight: 600;
+}
+.footer-compliance {
+  color: rgba(255,255,255,.55);
+  font-size: .78rem;
+}
+.footer-ad-review {
+  color: rgba(255,255,255,.4);
+  font-size: .75rem;
+  margin-top: 2px;
 }
 #site-footer a { color: rgba(255,255,255,.6); text-decoration: none; }
 #site-footer strong { color: rgba(255,255,255,.8); font-weight: 600; }
