@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>라이프랩 LIFE LAB — 관리자</title>
+  <link rel="stylesheet" href="/css/admin.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" />
+  <link rel="icon" href="/images/logo.svg" type="image/svg+xml" />
+</head>
+<body>
+
+<!-- ── Login Page ─────────────────────────────── -->
+<div id="login-page">
+  <div class="login-box">
+    <div class="login-logo">
+      <img src="/images/logo.svg" alt="로고" />
+      <div class="login-logo-text">
+        <div class="main">라이프랩</div>
+        <div class="sub">LIFE LAB</div>
+      </div>
+    </div>
+    <div class="login-title">관리자 로그인</div>
+    <div class="login-field">
+      <label>아이디</label>
+      <input type="text" id="login-id" placeholder="아이디 입력" />
+    </div>
+    <div class="login-field">
+      <label>비밀번호</label>
+      <input type="password" id="login-pw" placeholder="비밀번호 입력"
+        onkeydown="if(event.key==='Enter') doLogin()" />
+    </div>
+    <div class="login-error" id="login-error"></div>
+    <button id="login-btn" onclick="doLogin()">
+      <i class="fas fa-lock-open"></i> 로그인
+    </button>
+  </div>
+</div>
+
+<!-- ── App Page ────────────────────────────────── -->
+<div id="app-page">
+
+  <!-- Sidebar -->
+  <aside id="sidebar">
+    <div class="sidebar-logo">
+      <img src="/images/logo.svg" alt="로고" />
+      <div class="sidebar-logo-text">
+        <div class="main">라이프랩</div>
+        <div class="sub">ADMIN</div>
+      </div>
+    </div>
+    <nav class="sidebar-menu">
+      <div class="menu-item active" onclick="switchTab('consultations')">
+        <i class="fas fa-list-check"></i> 상담 신청 목록
+      </div>
+      <div class="menu-item" onclick="switchTab('staff')">
+        <i class="fas fa-users"></i> 담당자 관리
+      </div>
+      <div class="menu-item" onclick="switchTab('settings')">
+        <i class="fas fa-gear"></i> 사이트 설정
+      </div>
+    </nav>
+    <div class="sidebar-footer">
+      <button id="logout-btn" onclick="doLogout()">
+        <i class="fas fa-right-from-bracket"></i> 로그아웃
+      </button>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <div id="main-content">
+    <div class="top-bar">
+      <span class="top-bar-title" id="top-bar-title">상담 신청 목록</span>
+      <div class="top-bar-right">
+        <i class="fas fa-circle" style="color:#4ade80;font-size:.55rem"></i>
+        관리자 · 라이프랩
+      </div>
+    </div>
+
+    <div class="content-area">
+
+      <!-- ── 상담 신청 목록 탭 ─────────────────── -->
+      <div class="tab-panel active" id="tab-consultations">
+
+        <!-- 통계 카드 -->
+        <div class="stat-grid" id="stat-grid">
+          <div class="stat-card">
+            <div class="stat-icon blue"><i class="fas fa-clipboard-list"></i></div>
+            <div class="stat-info">
+              <div class="stat-label">전체 신청</div>
+              <div class="stat-value" id="stat-total">0</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon yellow"><i class="fas fa-bell"></i></div>
+            <div class="stat-info">
+              <div class="stat-label">신규</div>
+              <div class="stat-value" id="stat-new">0</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon green"><i class="fas fa-phone-volume"></i></div>
+            <div class="stat-info">
+              <div class="stat-label">상담 완료</div>
+              <div class="stat-value" id="stat-done">0</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon purple"><i class="fas fa-handshake"></i></div>
+            <div class="stat-info">
+              <div class="stat-label">계약 완료</div>
+              <div class="stat-value" id="stat-contracted">0</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 유입경로 탭 -->
+        <div class="source-tabs" id="source-tabs">
+          <button class="source-tab active" data-src="all" onclick="filterBySource('all',this)">
+            전체
+          </button>
+          <button class="source-tab" data-src="instagram" onclick="filterBySource('instagram',this)">
+            📷 인스타광고
+          </button>
+        </div>
+
+        <!-- 검색 + 필터 -->
+        <div class="filter-bar">
+          <input type="text" id="search-input" placeholder="이름, 연락처, 직업 검색..."
+            oninput="renderTable()" />
+          <select id="status-filter" onchange="renderTable()">
+            <option value="">전체 상태</option>
+            <option value="신규">신규</option>
+            <option value="상담완료">상담완료</option>
+            <option value="계약완료">계약완료</option>
+            <option value="취소">취소</option>
+          </select>
+          <button class="btn-excel" onclick="exportExcel()">
+            <i class="fas fa-file-excel"></i> 엑셀 다운로드
+          </button>
+        </div>
+
+        <!-- 테이블 -->
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>신청일</th>
+                <th>이름</th>
+                <th>연락처</th>
+                <th>직업</th>
+                <th>재무점수</th>
+                <th>유형</th>
+                <th>희망시간</th>
+                <th>유입경로</th>
+                <th>상태</th>
+                <th>담당자</th>
+                <th>관리</th>
+              </tr>
+            </thead>
+            <tbody id="consultation-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ── 담당자 관리 탭 ─────────────────────── -->
+      <div class="tab-panel" id="tab-staff">
+
+        <!-- 직원별 통계 카드 -->
+        <div class="staff-stats-grid" id="staff-stats-grid"></div>
+
+        <!-- 직원 테이블 -->
+        <div class="section-header">
+          <h3><i class="fas fa-users" style="color:var(--primary)"></i> 담당자 목록</h3>
+          <button class="btn-add" onclick="openAddStaff()">
+            <i class="fas fa-plus"></i> 담당자 추가
+          </button>
+        </div>
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>이름</th>
+                <th>링크 ID</th>
+                <th>신청건수</th>
+                <th>상태</th>
+                <th>등록일</th>
+                <th>단축링크</th>
+                <th>관리</th>
+              </tr>
+            </thead>
+            <tbody id="staff-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ── 사이트 설정 탭 ─────────────────────── -->
+      <div class="tab-panel" id="tab-settings">
+        <div class="settings-grid" id="settings-grid">
+          <div class="settings-card">
+            <label>광고심의필번호</label>
+            <input type="text" id="set-ad_review_no" placeholder="예: 2024-금융-0001" />
+          </div>
+          <div class="settings-card">
+            <label>심의일자</label>
+            <input type="text" id="set-ad_review_date" placeholder="예: 2024.01.01" />
+          </div>
+          <div class="settings-card">
+            <label>심의기관</label>
+            <input type="text" id="set-ad_review_org" placeholder="예: 금융감독원" />
+          </div>
+          <div class="settings-card">
+            <label>개인정보처리방침 URL</label>
+            <input type="text" id="set-privacy_url" placeholder="https://..." />
+          </div>
+          <div class="settings-card full-width">
+            <label>준법감시 문구</label>
+            <textarea id="set-compliance_text" rows="3"></textarea>
+          </div>
+          <div class="settings-card full-width">
+            <label>하단 고지문구</label>
+            <textarea id="set-footer_notice" rows="3"></textarea>
+          </div>
+        </div>
+        <button class="settings-save-btn" onclick="saveSettings()">
+          <i class="fas fa-floppy-disk"></i> 설정 저장
+        </button>
+      </div>
+
+    </div><!-- /content-area -->
+  </div><!-- /main-content -->
+</div><!-- /app-page -->
+
+<!-- ══════════════════════════════════════════════════
+     MODAL — 상담 상세
+══════════════════════════════════════════════════ -->
+<div class="modal-overlay" id="detail-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3><i class="fas fa-file-medical"></i> 상담 신청 상세</h3>
+      <button class="modal-close" onclick="closeModal('detail-modal')">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+    <div class="modal-body" id="detail-modal-body"></div>
+    <div class="modal-footer">
+      <button class="btn-danger" onclick="deleteConsultation()">
+        <i class="fas fa-trash"></i> 삭제
+      </button>
+      <button class="btn-secondary" onclick="closeModal('detail-modal')">닫기</button>
+      <button class="btn-primary" onclick="saveDetailChanges()">
+        <i class="fas fa-floppy-disk"></i> 변경사항 저장
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════
+     MODAL — 담당자 추가
+══════════════════════════════════════════════════ -->
+<div class="modal-overlay" id="staff-modal">
+  <div class="modal" style="max-width:420px">
+    <div class="modal-header">
+      <h3><i class="fas fa-user-plus"></i> 담당자 추가</h3>
+      <button class="modal-close" onclick="closeModal('staff-modal')">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-field">
+        <label>담당자 이름 <span style="color:red">*</span></label>
+        <input type="text" id="new-staff-name" placeholder="예: 김재무" />
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="closeModal('staff-modal')">취소</button>
+      <button class="btn-primary" onclick="addStaff()">
+        <i class="fas fa-plus"></i> 추가
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div id="toast"><i class="fas fa-circle-check"></i> <span id="toast-msg"></span></div>
+
+<script src="/js/admin.js"></script>
+</body>
+</html>

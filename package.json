@@ -1,19 +1,26 @@
 {
-  "name": "webapp",
+  "name": "lifelab-diagnosis",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "wrangler pages dev",
-    "deploy": "npm run build && wrangler pages deploy",
+    "preview": "wrangler pages dev dist",
+    "dev:sandbox": "wrangler pages dev dist --d1=lifelab-production --local --ip 0.0.0.0 --port 3000",
+    "deploy": "npm run build && wrangler pages deploy dist --project-name lifelab-diagnosis",
+    "db:migrate:local": "wrangler d1 migrations apply lifelab-production --local",
+    "db:migrate:prod": "wrangler d1 migrations apply lifelab-production",
+    "db:seed": "wrangler d1 execute lifelab-production --local --file=./seed.sql",
+    "db:reset": "rm -rf .wrangler/state/v3/d1 && npm run db:migrate:local",
     "cf-typegen": "wrangler types --env-interface CloudflareBindings"
   },
   "dependencies": {
     "hono": "^4.12.12"
   },
   "devDependencies": {
+    "@cloudflare/workers-types": "^4.20260506.1",
     "@hono/vite-build": "^1.2.0",
     "@hono/vite-dev-server": "^0.18.2",
+    "typescript": "^5.9.3",
     "vite": "^6.3.5",
     "wrangler": "^4.4.0"
   }

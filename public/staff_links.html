@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>라이프랩 LIFE LAB — 직원 전용</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" />
+  <link rel="icon" href="/images/logo.svg" type="image/svg+xml" />
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700;800&display=swap');
+    :root {
+      --primary:#2563eb; --primary-light:#3b82f6; --primary-dark:#1d4ed8;
+      --primary-bg:#eff6ff; --navy:#0f172a;
+      --gray-50:#f8fafc; --gray-100:#f1f5f9; --gray-200:#e2e8f0;
+      --gray-300:#cbd5e1; --gray-400:#94a3b8; --gray-500:#64748b;
+      --gray-600:#475569; --gray-700:#334155; --gray-800:#1e293b;
+      --success:#16a34a; --success-bg:#f0fdf4;
+      --warning:#d97706; --warning-bg:#fffbeb;
+      --orange:#ea580c; --orange-bg:#fff7ed;
+      --danger:#dc2626; --danger-bg:#fef2f2;
+      --radius:12px; --radius-lg:16px;
+      --shadow:0 4px 16px rgba(0,0,0,.08);
+      --shadow-sm:0 1px 3px rgba(0,0,0,.08);
+    }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+    body{font-family:'Noto Sans KR',sans-serif;background:var(--gray-50);color:var(--gray-800);min-height:100vh;}
+
+    /* ── Login ── */
+    #login-page{
+      min-height:100vh;display:flex;align-items:center;justify-content:center;
+      background:linear-gradient(160deg,var(--navy) 0%,#1e3a8a 100%);padding:20px;
+    }
+    .login-box{
+      background:#fff;border-radius:20px;padding:44px 40px;width:100%;max-width:420px;
+      box-shadow:0 20px 60px rgba(0,0,0,.3);
+    }
+    .login-logo{display:flex;align-items:center;gap:10px;margin-bottom:8px;}
+    .login-logo img{width:44px;height:44px;}
+    .login-logo-text .main{font-size:1.15rem;font-weight:800;color:var(--navy);}
+    .login-logo-text .sub{font-size:.65rem;color:var(--primary);letter-spacing:1.5px;font-weight:600;}
+    .login-title{font-size:1rem;font-weight:700;color:var(--gray-700);margin-bottom:24px;text-align:center;}
+    .login-subtitle{font-size:.83rem;color:var(--gray-400);text-align:center;margin-bottom:24px;}
+    .field{margin-bottom:14px;}
+    .field label{display:block;font-size:.82rem;font-weight:600;color:var(--gray-600);margin-bottom:6px;}
+    .field input,.field select{
+      width:100%;padding:11px 14px;border:1.5px solid var(--gray-200);
+      border-radius:10px;font-size:.9rem;font-family:inherit;outline:none;
+      transition:border-color .2s;background:#fff;color:var(--gray-800);
+    }
+    .field input:focus,.field select:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(37,99,235,.1);}
+    .login-error{color:var(--danger);font-size:.82rem;margin:-6px 0 10px;min-height:18px;}
+    .login-btn{
+      width:100%;padding:13px;background:var(--primary);color:#fff;
+      border:none;border-radius:10px;font-size:.95rem;font-weight:700;
+      cursor:pointer;transition:background .2s;font-family:inherit;
+      display:flex;align-items:center;justify-content:center;gap:8px;
+    }
+    .login-btn:hover{background:var(--primary-dark);}
+
+    /* ── App ── */
+    #app-page{display:none;}
+    #app-page.show{display:block;}
+
+    /* Header */
+    .staff-header{
+      background:linear-gradient(135deg,var(--navy) 0%,#1e3a8a 100%);
+      padding:0;position:sticky;top:0;z-index:100;
+    }
+    .staff-header-inner{
+      max-width:760px;margin:0 auto;padding:14px 20px;
+      display:flex;align-items:center;justify-content:space-between;gap:12px;
+    }
+    .header-logo{display:flex;align-items:center;gap:10px;text-decoration:none;}
+    .header-logo img{width:36px;height:36px;}
+    .header-logo-text .main{font-size:.95rem;font-weight:800;color:#fff;}
+    .header-logo-text .sub{font-size:.6rem;color:rgba(255,255,255,.5);letter-spacing:1px;}
+    .staff-name-badge{
+      background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);
+      color:#fff;border-radius:50px;padding:6px 14px;font-size:.83rem;font-weight:600;
+    }
+    .logout-btn{
+      background:rgba(255,255,255,.1);color:rgba(255,255,255,.7);
+      border:none;border-radius:8px;padding:7px 14px;font-size:.8rem;
+      font-weight:600;cursor:pointer;transition:background .2s;font-family:inherit;
+    }
+    .logout-btn:hover{background:rgba(255,255,255,.2);color:#fff;}
+
+    /* Main */
+    .staff-main{max-width:760px;margin:0 auto;padding:32px 20px 60px;}
+
+    /* Section Title */
+    .section-title{
+      font-size:.72rem;font-weight:700;color:var(--gray-400);
+      text-transform:uppercase;letter-spacing:.8px;
+      margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--gray-200);
+      display:flex;align-items:center;gap:6px;
+    }
+
+    /* Card */
+    .card{
+      background:#fff;border-radius:var(--radius-lg);box-shadow:var(--shadow);
+      padding:24px;margin-bottom:20px;border:1px solid rgba(0,0,0,.04);
+    }
+    .card-title{font-size:1rem;font-weight:700;color:var(--navy);margin-bottom:16px;display:flex;align-items:center;gap:8px;}
+
+    /* Link Box */
+    .link-box{
+      background:var(--gray-50);border:1.5px solid var(--gray-200);
+      border-radius:var(--radius);padding:14px 16px;
+      font-size:.88rem;font-family:monospace;color:var(--gray-700);
+      word-break:break-all;margin-bottom:12px;line-height:1.6;
+      min-height:44px;
+    }
+    .link-actions{display:flex;gap:8px;flex-wrap:wrap;}
+    .btn{
+      display:inline-flex;align-items:center;gap:6px;
+      padding:9px 18px;border-radius:50px;font-size:.83rem;font-weight:700;
+      cursor:pointer;transition:all .2s;border:none;font-family:inherit;
+      white-space:nowrap;
+    }
+    .btn-primary{background:var(--primary);color:#fff;box-shadow:0 2px 8px rgba(37,99,235,.3);}
+    .btn-primary:hover{background:var(--primary-dark);}
+    .btn-secondary{background:var(--gray-100);color:var(--gray-700);}
+    .btn-secondary:hover{background:var(--gray-200);}
+    .btn-success{background:var(--success);color:#fff;}
+    .btn-success:hover{background:#15803d;}
+    .btn-outline{background:#fff;color:var(--primary);border:1.5px solid var(--primary);}
+    .btn-outline:hover{background:var(--primary-bg);}
+    .btn-sm{padding:6px 14px;font-size:.78rem;}
+
+    /* Original URL toggle */
+    #original-url-wrap{display:none;margin-top:10px;animation:fadeIn .3s ease;}
+    @keyframes fadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+
+    /* QR */
+    .qr-wrap{display:flex;align-items:flex-start;gap:20px;flex-wrap:wrap;}
+    #qr-container{
+      background:#fff;border:2px solid var(--gray-200);border-radius:var(--radius);
+      padding:12px;display:inline-block;
+    }
+    #qr-container canvas,#qr-container img{display:block;}
+    .qr-actions{display:flex;flex-direction:column;gap:8px;}
+
+    /* SMS Template */
+    .sms-box{
+      background:var(--gray-50);border:1px solid var(--gray-200);border-radius:var(--radius);
+      padding:14px 16px;font-size:.85rem;color:var(--gray-700);line-height:1.7;
+      white-space:pre-wrap;margin-bottom:12px;word-break:break-all;
+    }
+
+    /* Stats Grid */
+    .stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:0;}
+    .stat-card{
+      background:#fff;border:1px solid var(--gray-100);border-radius:var(--radius);
+      padding:16px;text-align:center;box-shadow:var(--shadow-sm);
+    }
+    .stat-icon{
+      width:38px;height:38px;border-radius:10px;display:flex;
+      align-items:center;justify-content:center;font-size:.95rem;margin:0 auto 8px;
+    }
+    .stat-icon.blue{background:var(--primary-bg);color:var(--primary);}
+    .stat-icon.yellow{background:var(--warning-bg);color:var(--warning);}
+    .stat-icon.green{background:var(--success-bg);color:var(--success);}
+    .stat-icon.purple{background:#f5f3ff;color:#7c3aed;}
+    .stat-label{font-size:.72rem;color:var(--gray-500);margin-bottom:4px;}
+    .stat-value{font-size:1.5rem;font-weight:800;color:var(--navy);}
+
+    /* Loader */
+    .loader{
+      display:inline-block;width:18px;height:18px;
+      border:2.5px solid rgba(255,255,255,.3);border-top-color:#fff;
+      border-radius:50%;animation:spin .7s linear infinite;
+    }
+    @keyframes spin{to{transform:rotate(360deg)}}
+
+    /* Toast */
+    #toast{
+      position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(12px);
+      background:var(--navy);color:#fff;padding:12px 24px;border-radius:50px;
+      font-size:.88rem;font-weight:600;z-index:9999;opacity:0;
+      transition:opacity .3s,transform .3s;pointer-events:none;
+      box-shadow:0 4px 16px rgba(0,0,0,.25);white-space:nowrap;
+    }
+    #toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+    #toast.success{background:var(--success);}
+    #toast.error{background:var(--danger);}
+
+    @media(max-width:600px){
+      .stat-grid{grid-template-columns:repeat(2,1fr);}
+      .login-box{padding:32px 24px;}
+      .qr-wrap{flex-direction:column;}
+      .link-actions{flex-direction:column;}
+      .btn{justify-content:center;}
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── Login Page ───────────────────────────────── -->
+<div id="login-page">
+  <div class="login-box">
+    <div style="text-align:center;margin-bottom:24px;">
+      <div class="login-logo" style="justify-content:center;margin-bottom:12px;">
+        <img src="/images/logo.svg" alt="로고" />
+        <div class="login-logo-text">
+          <div class="main">라이프랩</div>
+          <div class="sub">LIFE LAB</div>
+        </div>
+      </div>
+      <div style="font-size:1.05rem;font-weight:700;color:var(--navy);margin-bottom:6px;">직원 전용 페이지</div>
+      <div style="font-size:.83rem;color:var(--gray-400);">담당자를 선택하고 비밀번호를 입력하세요</div>
+    </div>
+
+    <div class="field">
+      <label>담당자 선택 <span style="color:red">*</span></label>
+      <select id="staff-select">
+        <option value="">담당자를 선택하세요</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>비밀번호 <span style="color:red">*</span></label>
+      <input type="password" id="staff-pw" placeholder="비밀번호 입력"
+        onkeydown="if(event.key==='Enter') doStaffLogin()" />
+    </div>
+    <div class="login-error" id="staff-login-error"></div>
+    <button class="login-btn" onclick="doStaffLogin()">
+      <i class="fas fa-sign-in-alt"></i> 로그인
+    </button>
+  </div>
+</div>
+
+<!-- ── App Page ──────────────────────────────────── -->
+<div id="app-page">
+
+  <!-- Header -->
+  <header class="staff-header">
+    <div class="staff-header-inner">
+      <a href="/" class="header-logo">
+        <img src="/images/logo.svg" alt="로고" />
+        <div class="header-logo-text">
+          <div class="main">라이프랩</div>
+          <div class="sub">STAFF</div>
+        </div>
+      </a>
+      <span class="staff-name-badge" id="staff-name-display">
+        <i class="fas fa-user-tie"></i> <span id="header-staff-name">—</span> 담당자
+      </span>
+      <button class="logout-btn" onclick="doLogout()">
+        <i class="fas fa-right-from-bracket"></i> 로그아웃
+      </button>
+    </div>
+  </header>
+
+  <main class="staff-main">
+
+    <!-- 통계 -->
+    <div class="section-title"><i class="fas fa-chart-bar"></i> 내 신청 통계</div>
+    <div class="stat-grid" style="margin-bottom:24px;">
+      <div class="stat-card">
+        <div class="stat-icon blue"><i class="fas fa-clipboard-list"></i></div>
+        <div class="stat-label">전체</div>
+        <div class="stat-value" id="my-total">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon yellow"><i class="fas fa-bell"></i></div>
+        <div class="stat-label">신규</div>
+        <div class="stat-value" id="my-new">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon green"><i class="fas fa-phone-volume"></i></div>
+        <div class="stat-label">상담완료</div>
+        <div class="stat-value" id="my-done">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon purple"><i class="fas fa-handshake"></i></div>
+        <div class="stat-label">계약완료</div>
+        <div class="stat-value" id="my-contracted">0</div>
+      </div>
+    </div>
+
+    <!-- 개인 링크 -->
+    <div class="section-title"><i class="fas fa-link"></i> 나의 전용 링크</div>
+    <div class="card">
+      <div class="card-title"><i class="fas fa-share-nodes" style="color:var(--primary)"></i> 단축 링크</div>
+
+      <div style="font-size:.82rem;color:var(--gray-400);margin-bottom:10px;">
+        아래 링크를 통해 진단을 신청하면 자동으로 담당자로 연결됩니다.
+      </div>
+
+      <div class="link-box" id="short-url-box">
+        <span class="loader"></span> 단축 링크 생성 중...
+      </div>
+
+      <div class="link-actions" id="link-actions" style="display:none">
+        <button class="btn btn-primary" onclick="copyShortLink()">
+          <i class="fas fa-copy"></i> 링크 복사
+        </button>
+        <button class="btn btn-outline btn-sm" onclick="toggleOriginal()">
+          <i class="fas fa-eye"></i> 원본 URL 보기
+        </button>
+        <a class="btn btn-secondary btn-sm" id="preview-btn" href="#" target="_blank">
+          <i class="fas fa-external-link-alt"></i> 미리보기
+        </a>
+      </div>
+
+      <div id="original-url-wrap">
+        <div style="font-size:.75rem;color:var(--gray-400);margin-bottom:4px;">원본 URL</div>
+        <div class="link-box" id="original-url-box" style="font-size:.8rem;color:var(--gray-500);">—</div>
+      </div>
+    </div>
+
+    <!-- QR 코드 -->
+    <div class="card">
+      <div class="card-title"><i class="fas fa-qrcode" style="color:var(--primary)"></i> QR 코드</div>
+      <div style="font-size:.82rem;color:var(--gray-400);margin-bottom:16px;">
+        단축 링크 기반으로 생성된 QR 코드입니다. 명함이나 자료에 활용하세요.
+      </div>
+      <div class="qr-wrap">
+        <div id="qr-container">
+          <div style="width:160px;height:160px;display:flex;align-items:center;justify-content:center;color:var(--gray-300);">
+            <i class="fas fa-qrcode" style="font-size:3rem;"></i>
+          </div>
+        </div>
+        <div class="qr-actions">
+          <button class="btn btn-success" onclick="saveQR()">
+            <i class="fas fa-download"></i> 이미지 저장
+          </button>
+          <button class="btn btn-outline" onclick="generateQR()">
+            <i class="fas fa-sync"></i> QR 새로고침
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 문자 템플릿 -->
+    <div class="card">
+      <div class="card-title"><i class="fas fa-comment-sms" style="color:var(--primary)"></i> 문자 발송 템플릿</div>
+      <div class="sms-box" id="sms-template">링크 생성 중...</div>
+      <div class="link-actions">
+        <button class="btn btn-primary" onclick="copySms()">
+          <i class="fas fa-copy"></i> 문자 내용 복사
+        </button>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<div id="toast"></div>
+
+<!-- QR Code JS -->
+<script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+<script>
+/* ═══════════════════════════════════════════════
+   Staff Links Logic
+   ═══════════════════════════════════════════════ */
+
+const STAFF_PW    = 'lifelab2026!'
+const BITLY_TOKEN = '4f4580c98e61892b510fd28c01c2f5e82b0e82d5'
+
+let currentStaff  = null
+let shortUrl      = ''
+let longUrl       = ''
+let originalShown = false
+let qrInstance    = null
+
+// ── Load staff list ─────────────────────────────
+;(async function init() {
+  try {
+    const res  = await fetch('/tables/staff')
+    const data = await res.json()
+    const sel  = document.getElementById('staff-select')
+    data.filter(s => s.active).forEach(s => {
+      const opt   = document.createElement('option')
+      opt.value   = JSON.stringify({ id: s.id, name: s.name })
+      opt.textContent = s.name
+      sel.appendChild(opt)
+    })
+  } catch(e) {
+    showToast('직원 목록 로드 실패', 'error')
+  }
+
+  // Auto-session
+  const saved = sessionStorage.getItem('ll_staff')
+  if (saved) {
+    try {
+      currentStaff = JSON.parse(saved)
+      showApp()
+    } catch(e) { sessionStorage.removeItem('ll_staff') }
+  }
+})()
+
+// ── Login ───────────────────────────────────────
+function doStaffLogin() {
+  const selVal = document.getElementById('staff-select').value
+  const pw     = document.getElementById('staff-pw').value
+  const err    = document.getElementById('staff-login-error')
+
+  if (!selVal) { err.textContent = '담당자를 선택해 주세요.'; return }
+  if (pw !== STAFF_PW) { err.textContent = '비밀번호가 올바르지 않습니다.'; return }
+
+  currentStaff = JSON.parse(selVal)
+  sessionStorage.setItem('ll_staff', JSON.stringify(currentStaff))
+  showApp()
+}
+
+function doLogout() {
+  sessionStorage.removeItem('ll_staff')
+  location.reload()
+}
+
+// ── Show App ─────────────────────────────────────
+async function showApp() {
+  document.getElementById('login-page').style.display  = 'none'
+  document.getElementById('app-page').classList.add('show')
+  document.getElementById('header-staff-name').textContent = currentStaff.name
+
+  await loadMyStats()
+  await buildLinks()
+}
+
+// ── Stats ─────────────────────────────────────────
+async function loadMyStats() {
+  try {
+    const res  = await fetch('/tables/consultations')
+    const data = await res.json()
+    const mine = data.filter(c =>
+      String(c.ref_staff) === String(currentStaff.id) ||
+      c.ref_staff_name === currentStaff.name
+    )
+    document.getElementById('my-total').textContent      = mine.length
+    document.getElementById('my-new').textContent        = mine.filter(c => c.status === '신규').length
+    document.getElementById('my-done').textContent       = mine.filter(c => c.status === '상담완료').length
+    document.getElementById('my-contracted').textContent = mine.filter(c => c.status === '계약완료').length
+  } catch(e) {}
+}
+
+// ── Build Links ───────────────────────────────────
+async function buildLinks() {
+  const origin = location.origin
+  longUrl = `${origin}/?ref=${currentStaff.id}&rn=${encodeURIComponent(currentStaff.name)}`
+
+  document.getElementById('original-url-box').textContent = longUrl
+  document.getElementById('preview-btn').href = longUrl
+
+  // Shorten with Bit.ly
+  const shortened = await shortenUrl(longUrl)
+  shortUrl = shortened || longUrl
+
+  document.getElementById('short-url-box').textContent = shortUrl
+  document.getElementById('link-actions').style.display = 'flex'
+  document.getElementById('preview-btn').href = longUrl
+
+  // SMS template
+  updateSmsTemplate()
+
+  // QR
+  generateQR()
+}
+
+async function shortenUrl(url) {
+  try {
+    const res = await fetch('https://api-ssl.bitly.com/v4/shorten', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${BITLY_TOKEN}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ long_url: url })
+    })
+    const data = await res.json()
+    return data.link || null
+  } catch(e) { return null }
+}
+
+// ── Copy Short Link ────────────────────────────────
+function copyShortLink() {
+  navigator.clipboard.writeText(shortUrl).then(() => {
+    showToast('링크가 복사되었습니다! 📎', 'success')
+  }).catch(() => {
+    prompt('아래 링크를 복사하세요:', shortUrl)
+  })
+}
+
+// ── Toggle Original ────────────────────────────────
+function toggleOriginal() {
+  originalShown = !originalShown
+  const wrap = document.getElementById('original-url-wrap')
+  const btn  = document.querySelector('[onclick="toggleOriginal()"]')
+  wrap.style.display = originalShown ? 'block' : 'none'
+  btn.innerHTML = originalShown
+    ? '<i class="fas fa-eye-slash"></i> 원본 URL 숨기기'
+    : '<i class="fas fa-eye"></i> 원본 URL 보기'
+}
+
+// ── QR Code ────────────────────────────────────────
+function generateQR() {
+  if (!shortUrl) return
+  const container = document.getElementById('qr-container')
+  container.innerHTML = ''
+  qrInstance = new QRCode(container, {
+    text: shortUrl,
+    width: 160,
+    height: 160,
+    colorDark: '#0f172a',
+    colorLight: '#ffffff',
+    correctLevel: QRCode.CorrectLevel.H
+  })
+  showToast('QR 코드가 생성되었습니다.', 'success')
+}
+
+function saveQR() {
+  const canvas = document.querySelector('#qr-container canvas')
+  const img    = document.querySelector('#qr-container img')
+  if (canvas) {
+    const a   = document.createElement('a')
+    a.download = `lifelab_qr_${currentStaff.name}.png`
+    a.href     = canvas.toDataURL('image/png')
+    a.click()
+  } else if (img) {
+    const a   = document.createElement('a')
+    a.download = `lifelab_qr_${currentStaff.name}.png`
+    a.href     = img.src
+    a.click()
+  } else {
+    showToast('QR 코드를 먼저 생성해 주세요.', 'error')
+  }
+}
+
+// ── SMS Template ───────────────────────────────────
+function updateSmsTemplate() {
+  const template = `안녕하세요! 라이프랩 ${currentStaff.name} 담당자입니다. 😊
+
+재무건강 무료진단 서비스를 소개해 드립니다.
+소득·저축·부채·보험·노후 등 8가지 항목을 분석해 100점 만점으로 진단받고, 전문가 맞춤 상담까지 완전 무료로 받아보세요!
+
+🔗 무료 진단 링크:
+${shortUrl}
+
+⏱ 5분이면 완료 · 완전 익명 · 무료 상담 연결
+
+라이프랩 재무건강 진단으로 더 나은 미래를 준비하세요.`
+  document.getElementById('sms-template').textContent = template
+}
+
+function copySms() {
+  const text = document.getElementById('sms-template').textContent
+  navigator.clipboard.writeText(text).then(() => {
+    showToast('문자 내용이 복사되었습니다! 📱', 'success')
+  }).catch(() => {
+    alert(text)
+  })
+}
+
+// ── Toast ───────────────────────────────────────────
+function showToast(msg, type = '') {
+  const el = document.getElementById('toast')
+  el.textContent = msg
+  el.className   = 'show' + (type ? ` ${type}` : '')
+  setTimeout(() => { el.className = '' }, 3200)
+}
+</script>
+</body>
+</html>
