@@ -490,13 +490,49 @@ async function submitConsultation() {
 }
 
 // ── Share Link ────────────────────────────────
-function copyShareLink() {
-  const url = `${location.origin}/?ref=${state.ref_staff}&rn=${encodeURIComponent(state.ref_staff_name)}`
-  navigator.clipboard.writeText(url).then(() => {
-    showToast('링크가 복사되었습니다! 지인에게 공유해 보세요 📎')
-  }).catch(() => {
-    prompt('아래 링크를 복사하세요:', url)
-  })
+const BITLY_TOKEN = '4f4580c98e61892b510fd28c01c2f5e82b0e82d5'
+
+async function copyShareLink() {
+  const btn = document.querySelector('.btn-copy')
+  const longUrl = `${location.origin}/?ref=${state.ref_staff}&rn=${encodeURIComponent(state.ref_staff_name)}`
+
+  // 버튼 로딩 상태
+  if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 링크 생성 중...' }
+
+  try {
+    // bit.ly API로 단축
+    const res = await fetch('https://api-ssl.bitly.com/v4/shorten', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${BITLY_TOKEN}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ long_url: longUrl })
+    })
+    const data = await res.json()
+    const shortUrl = data.link || longUrl
+
+    await navigator.clipboard.writeText(shortUrl)
+    showToast('단축 링크가 복사되었습니다! 지인에게 공유해 보세요 📎')
+
+    // 버튼에 단축 URL 표시
+    if (btn) {
+      btn.disabled = false
+      btn.innerHTML = `<i class="fas fa-check"></i> ${shortUrl}`
+      setTimeout(() => {
+        btn.innerHTML = '<i class="fas fa-share-nodes"></i> 지인에게 링크 공유하기'
+      }, 4000)
+    }
+  } catch(e) {
+    // 실패 시 원본 링크 복사
+    try {
+      await navigator.clipboard.writeText(longUrl)
+      showToast('링크가 복사되었습니다! 📎')
+    } catch {
+      prompt('아래 링크를 복사하세요:', longUrl)
+    }
+    if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-share-nodes"></i> 지인에게 링크 공유하기' }
+  }
 }
 
 function restartDiagnosis() {
