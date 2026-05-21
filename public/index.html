@@ -380,6 +380,95 @@
 
 </div><!-- /steps-area -->
 
+<!-- ══════════════════════════════════════
+     ROULETTE MODAL OVERLAY
+══════════════════════════════════════ -->
+<div id="roulette-overlay" class="roulette-overlay" style="display:none">
+  <div class="roulette-modal">
+
+    <!-- 닫기 버튼 -->
+    <button class="roulette-close" id="roulette-close-btn" onclick="closeRoulette()" style="display:none">
+      <i class="fas fa-times"></i>
+    </button>
+
+    <!-- 헤더 -->
+    <div class="roulette-header">
+      <div class="roulette-title-badge">
+        <i class="fas fa-gift"></i> 이벤트 응모권
+      </div>
+      <h2 class="roulette-title">추첨 룰렛 돌리기!</h2>
+      <p class="roulette-desc">상담 신청 완료! 🎉<br />재미로 룰렛을 돌려보세요. 실제 추첨은 <strong>7월 31일</strong>에 진행됩니다.</p>
+    </div>
+
+    <!-- 응모권 현황 -->
+    <div class="entry-status-box" id="entry-status-box">
+      <div class="entry-status-item">
+        <div class="entry-status-icon"><i class="fas fa-ticket"></i></div>
+        <div class="entry-status-info">
+          <div class="entry-status-label">내 응모권</div>
+          <div class="entry-status-value"><span id="my-entry-count">1</span>장</div>
+        </div>
+      </div>
+      <div class="entry-status-item invite">
+        <div class="entry-status-icon"><i class="fas fa-user-plus"></i></div>
+        <div class="entry-status-info">
+          <div class="entry-status-label">지인 초대 보너스</div>
+          <div class="entry-status-value-sm">지인 초대 시 응모권 +1장</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 룰렛 바퀴 영역 -->
+    <div class="roulette-wheel-wrap" id="roulette-wheel-wrap">
+
+      <!-- 중앙 바늘/포인터 -->
+      <div class="roulette-pointer">▼</div>
+
+      <!-- 캔버스 룰렛 -->
+      <canvas id="roulette-canvas" width="280" height="280"></canvas>
+
+      <!-- 스핀 버튼 (캔버스 중심) -->
+      <button class="roulette-spin-center" id="roulette-spin-btn" onclick="spinRoulette()">
+        <i class="fas fa-play"></i><br/><span>돌리기</span>
+      </button>
+    </div>
+
+    <!-- 상품 목록 안내 -->
+    <div class="prize-list-mini">
+      <div class="prize-mini-item p10"><i class="fas fa-crown"></i> 상품권 10만원 — 10명</div>
+      <div class="prize-mini-item p5"><i class="fas fa-star"></i> 상품권 5만원 — 20명</div>
+      <div class="prize-mini-item chicken"><i class="fas fa-drumstick-bite"></i> 치킨 기프티콘 — 20명</div>
+      <div class="prize-mini-item sbux"><i class="fas fa-coffee"></i> 스타벅스 — 50명</div>
+    </div>
+
+    <!-- 결과 화면 (스핀 후 표시) -->
+    <div class="roulette-result-wrap" id="roulette-result-wrap" style="display:none">
+      <div class="roulette-result-icon" id="roulette-result-icon">🎉</div>
+      <div class="roulette-result-label" id="roulette-result-label">결과</div>
+      <div class="roulette-result-msg" id="roulette-result-msg"></div>
+      <div class="roulette-result-sub">
+        실제 당첨 발표는 <strong>2025년 7월 31일</strong>에 문자로 안내드립니다.<br />
+        응모권이 많을수록 당첨 확률이 높아집니다!
+      </div>
+
+      <!-- 지인 초대 CTA -->
+      <div class="invite-cta-box" id="invite-cta-box">
+        <div class="invite-cta-title"><i class="fas fa-user-plus"></i> 지인 초대하면 응모권 +1장!</div>
+        <div class="invite-cta-desc">아래 링크를 지인에게 공유하면 지인이 테스트 완료 시<br/>내 응모권이 1장 추가됩니다.</div>
+        <button class="invite-share-btn" onclick="copyInviteLink()">
+          <i class="fas fa-share-nodes"></i> 지인 초대 링크 복사
+        </button>
+        <div class="invite-count-info">현재 내 응모권: <strong id="invite-entry-display">1</strong>장</div>
+      </div>
+
+      <button class="roulette-done-btn" onclick="closeRoulette()">
+        <i class="fas fa-check"></i> 확인 완료
+      </button>
+    </div>
+
+  </div>
+</div>
+
 <!-- Footer -->
 <footer id="site-footer">
   <div class="footer-inner">

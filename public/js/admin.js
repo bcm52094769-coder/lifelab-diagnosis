@@ -8,6 +8,8 @@ const ADMIN_PW    = 'lifelab1234!'
 
 let allConsultations = []
 let allStaff         = []
+let allEntries       = []
+let allPrizes        = []
 let currentSrc       = 'all'
 let selectedRow      = null
 
@@ -47,15 +49,21 @@ function switchTab(name) {
   document.querySelectorAll('.menu-item').forEach(m => m.classList.remove('active'))
   document.getElementById(`tab-${name}`).classList.add('active')
 
-  const titles = { consultations: '상담 신청 목록', staff: '담당자 관리', settings: '사이트 설정' }
+  const titles = {
+    consultations: '상담 신청 목록',
+    staff:         '담당자 관리',
+    settings:      '사이트 설정',
+    event:         '이벤트 관리'
+  }
   document.getElementById('top-bar-title').textContent = titles[name] || ''
 
   const items = document.querySelectorAll('.menu-item')
-  const idx   = { consultations: 0, staff: 1, settings: 2 }
+  const idx   = { consultations: 0, staff: 1, settings: 2, event: 3 }
   if (items[idx[name]]) items[idx[name]].classList.add('active')
 
   if (name === 'staff')    loadStaff()
   if (name === 'settings') loadSettings()
+  if (name === 'event')    loadEvent()
 }
 
 // ── Load All ───────────────────────────────────
@@ -623,3 +631,238 @@ document.querySelectorAll('.modal-overlay').forEach(overlay => {
     if (e.target === overlay) overlay.classList.remove('show')
   })
 })
+
+// ════════════════════════════════════════════════════
+//  EVENT MANAGEMENT — 이벤트/응모권 관리
+// ════════════════════════════════════════════════════
+
+async function loadEvent() {
+  await Promise.all([loadEntries(), loadPrizes()])
+}
+
+// ── 응모권 목록 로드 ───────────────────────────────
+async function loadEntries() {
+  try {
+    const res = await fetch('/api/entries')
+    allEntries = await res.json()
+    updateEventStats()
+    renderEntries()
+  } catch(e) {
+    showToast('응모권 데이터 로드 실패', 'error')
+  }
+}
+
+// ── 이벤트 통계 업데이트 ───────────────────────────
+function updateEventStats() {
+  const total   = allEntries.length
+  const invited = allEntries.filter(e => e.invited_by && e.invited_by !== '').length
+  const played  = allEntries.filter(e => e.roulette_played).length
+  const tickets = allEntries.reduce((a, e) => a + (e.entry_count || 1), 0)
+
+  document.getElementById('ev-total').textContent   = total
+  document.getElementById('ev-invited').textContent = invited
+  document.getElementById('ev-played').textContent  = played
+  document.getElementById('ev-tickets').textContent = tickets
+}
+
+// ── 응모권 목록 렌더링 ─────────────────────────────
+function renderEntries() {
+  const search = (document.getElementById('entry-search')?.value || '').toLowerCase()
+  const tbody  = document.getElementById('entry-tbody')
+  if (!tbody) return
+
+  let data = allEntries
+  if (search) {
+    data = data.filter(e => {
+      const hay = `${e.name} ${e.phone}`.toLowerCase()
+      return hay.includes(search)
+    })
+  }
+
+  if (data.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;padding:32px;color:var(--gray-400)">응모권 데이터가 없습니다</td></tr>`
+    return
+  }
+
+  tbody.innerHTML = ''
+  data.forEach(e => {
+    const dt = e.created_at ? new Date(e.created_at).toLocaleDateString('ko-KR', {
+      year: '2-digit', month: '2-digit', day: '2-digit'
+    }) : '—'
+
+    // 유입 설계사 이름
+    const staffName = e.ref_staff_name || e.ref_staff || '인스타광고'
+
+    // 초대자 표시 (invited_by → 전화번호로 이름 검색)
+    let invitedFrom = '—'
+    if (e.invited_by) {
+      const inviter = allEntries.find(x => x.phone === e.invited_by)
+      invitedFrom = inviter ? `${esc(inviter.name)} (${formatPhone(e.invited_by)})` : formatPhone(e.invited_by)
+    }
+
+    // 룰렛 결과
+    const resultLabel = e.roulette_result || '—'
+    const resultCls   = e.roulette_result === '꽝' ? 'status-badge canceled' :
+                        e.roulette_result && e.roulette_result !== '' ? 'status-badge done' : ''
+    const resultDisp  = e.roulette_played
+      ? `<span class="${resultCls}">${esc(resultLabel)}</span>`
+      : '<span style="color:var(--gray-300)">미실행</span>'
+
+    // 초대한 지인 수
+    const inviteCount = e.invite_count || 0
+
+    tbody.insertAdjacentHTML('beforeend', `
+      <tr>
+        <td style="font-size:.78rem">${dt}</td>
+        <td><strong>${esc(e.name)}</strong></td>
+        <td style="font-size:.82rem">${formatPhone(e.phone)}</td>
+        <td style="font-size:.78rem">${esc(staffName)}</td>
+        <td style="font-size:.78rem">${invitedFrom}</td>
+        <td>
+          <span style="display:inline-flex;align-items:center;gap:4px;background:var(--primary-bg);color:var(--primary);padding:3px 10px;border-radius:50px;font-size:.82rem;font-weight:700">
+            <i class="fas fa-ticket" style="font-size:.7rem"></i>
+            ${e.entry_count || 1}장
+          </span>
+        </td>
+        <td style="font-size:.82rem">${inviteCount > 0 ? `<span style="color:var(--success);font-weight:700">${inviteCount}명</span>` : '—'}</td>
+        <td>${resultDisp}</td>
+        <td>
+          <span class="status-badge ${e.roulette_played ? 'done' : 'new'}" style="font-size:.72rem">
+            ${e.roulette_played ? '완료' : '대기'}
+          </span>
+        </td>
+      </tr>
+    `)
+  })
+}
+
+// ── 상품 설정 로드 ─────────────────────────────────
+async function loadPrizes() {
+  try {
+    const res = await fetch('/api/prizes')
+    allPrizes = await res.json()
+    renderPrizeConfig()
+  } catch(e) {}
+}
+
+// ── 상품 설정 렌더링 ───────────────────────────────
+function renderPrizeConfig() {
+  const grid = document.getElementById('prize-config-grid')
+  if (!grid) return
+
+  const prizeColors = {
+    '10만원':   '#f59e0b',
+    '5만원':    '#2563eb',
+    '치킨':     '#ea580c',
+    '스타벅스': '#16a34a',
+    '꽝':       '#64748b'
+  }
+  const prizeEmoji = {
+    '10만원':   '🏆',
+    '5만원':    '💙',
+    '치킨':     '🍗',
+    '스타벅스': '☕',
+    '꽝':       '😅'
+  }
+
+  grid.innerHTML = ''
+  allPrizes.forEach(p => {
+    const color = prizeColors[p.id] || '#64748b'
+    const emoji = prizeEmoji[p.id] || '🎁'
+    const remaining = (p.total_count || 0) - (p.win_count || 0)
+
+    grid.insertAdjacentHTML('beforeend', `
+      <div class="prize-config-card" style="border-left:4px solid ${color}">
+        <div class="prize-config-header">
+          <span class="prize-config-emoji">${emoji}</span>
+          <div class="prize-config-title">
+            <strong>${esc(p.label)}</strong>
+            <span style="font-size:.72rem;color:var(--gray-400)">${esc(p.id)}</span>
+          </div>
+          <label class="toggle-switch">
+            <input type="checkbox" id="prize-active-${esc(p.id)}" ${p.active ? 'checked' : ''} />
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+        <div class="prize-config-fields">
+          <div class="prize-field">
+            <label>총 당첨 인원</label>
+            <input type="number" id="prize-total-${esc(p.id)}" value="${p.total_count || 0}" min="0" style="width:80px;padding:6px 10px;border:1.5px solid var(--gray-200);border-radius:8px;font-size:.85rem;font-family:inherit;outline:none" />
+          </div>
+          <div class="prize-field" style="margin-left:auto;text-align:right">
+            <label>현재 당첨</label>
+            <span style="font-size:1rem;font-weight:700;color:${color}">${p.win_count || 0}명</span>
+          </div>
+          <div class="prize-field">
+            <label>잔여</label>
+            <span style="font-size:1rem;font-weight:700;color:${remaining > 0 ? 'var(--success)' : 'var(--danger)'}">${p.id === '꽝' ? '∞' : remaining + '명'}</span>
+          </div>
+        </div>
+      </div>
+    `)
+  })
+}
+
+// ── 상품 설정 저장 ─────────────────────────────────
+async function savePrizes() {
+  const payload = allPrizes.map(p => ({
+    id:          p.id,
+    label:       p.label,
+    total_count: parseInt(document.getElementById(`prize-total-${p.id}`)?.value || p.total_count, 10),
+    probability: p.probability,
+    active:      document.getElementById(`prize-active-${p.id}`)?.checked ? 1 : 0
+  }))
+
+  try {
+    await fetch('/api/prizes', {
+      method:  'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify(payload)
+    })
+    showToast('상품 설정이 저장되었습니다.', 'success')
+    await loadPrizes()
+  } catch(e) {
+    showToast('저장 실패. 다시 시도해 주세요.', 'error')
+  }
+}
+
+// ── 응모권 엑셀 다운로드 ───────────────────────────
+function exportEntriesExcel() {
+  const rows = [
+    ['신청일','이름','전화번호','유입설계사','초대받은경로','응모권수','초대지인수','룰렛결과','룰렛실행']
+  ]
+  allEntries.forEach(e => {
+    let invitedFrom = ''
+    if (e.invited_by) {
+      const inviter = allEntries.find(x => x.phone === e.invited_by)
+      invitedFrom = inviter ? `${inviter.name}(${e.invited_by})` : e.invited_by
+    }
+    rows.push([
+      e.created_at ? new Date(e.created_at).toLocaleDateString('ko-KR') : '',
+      e.name,
+      e.phone,
+      e.ref_staff_name || e.ref_staff,
+      invitedFrom,
+      e.entry_count || 1,
+      e.invite_count || 0,
+      e.roulette_result || '',
+      e.roulette_played ? '완료' : '대기'
+    ])
+  })
+
+  const csv  = rows.map(r => r.map(v => `"${String(v ?? '').replace(/"/g,'""')}"`).join(',')).join('\n')
+  const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' })
+  const a    = document.createElement('a')
+  a.href     = URL.createObjectURL(blob)
+  a.download = `lifelab_entries_${new Date().toISOString().slice(0,10)}.csv`
+  a.click()
+}
+
+// ── 전화번호 포맷 ──────────────────────────────────
+function formatPhone(phone) {
+  if (!phone) return '—'
+  const v = String(phone).replace(/\D/g, '')
+  if (v.length === 11) return `${v.slice(0,3)}-${v.slice(3,7)}-${v.slice(7)}`
+  if (v.length === 10) return `${v.slice(0,3)}-${v.slice(3,6)}-${v.slice(6)}`
+  return phone
+}

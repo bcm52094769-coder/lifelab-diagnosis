@@ -14,7 +14,17 @@ const state = {
   scores: {},
   ref_staff: 'instagram',
   ref_staff_name: '인스타광고',
-  submittedData: null
+  invited_by: '',     // 나를 초대한 사람 전화번호 (?invitedBy= 파라미터)
+  submittedData: null,
+  // 룰렛 상태
+  roulette: {
+    entryCount: 0,
+    phone: '',
+    played: false,
+    result: null,
+    spinning: false,
+    angle: 0            // 현재 캔버스 각도 (radians)
+  }
 }
 
 // ── 12문항 퀴즈 데이터 ──────────────────────────
@@ -190,6 +200,12 @@ const QUIZ = [
     const name   = document.getElementById('banner-name')
     banner.classList.add('show')
     name.textContent = decodeURIComponent(rn) + ' 담당자'
+  }
+
+  // 지인 초대 파라미터 (?invitedBy=전화번호)
+  const invitedBy = p.get('invitedBy')
+  if (invitedBy) {
+    state.invited_by = invitedBy.replace(/\D/g, '')
   }
 })()
 
@@ -586,6 +602,8 @@ async function submitConsultation() {
       body: JSON.stringify(payload)
     })
     if (!res.ok) throw new Error('서버 오류')
+    const resData = await res.json()
+    const consultId = resData.id || 0
 
     document.getElementById('done-name').textContent  = name
     document.getElementById('done-phone').textContent = phone
@@ -594,10 +612,300 @@ async function submitConsultation() {
     document.getElementById('done-time').textContent  = document.getElementById('c_time').value || '언제든 가능'
 
     goStep(4)
+
+    // ── 응모권 생성 & 룰렛 모달 열기 ──────────────────
+    try {
+      await createEntry(name, phone, consultId)
+    } catch(e) {
+      // 응모권 생성 실패해도 상담 완료는 유지
+      console.error('응모권 생성 오류:', e)
+    }
   } catch(e) {
     showAlert('신청 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.')
     btn.disabled = false
     btn.innerHTML = '<i class="fas fa-paper-plane"></i> 상담 신청 완료하기'
+  }
+}
+
+// ════════════════════════════════════════════════════
+//  ROULETTE & ENTRY SYSTEM
+// ════════════════════════════════════════════════════
+
+// ── 룰렛 상품 정의 (캔버스 렌더링용) ─────────────────
+const ROULETTE_SEGMENTS = [
+  { id: '10만원',   label: '10만원',   color: '#f59e0b', emoji: '🏆' },
+  { id: '꽝',       label: '꽝',       color: '#94a3b8', emoji: '😅' },
+  { id: '스타벅스', label: '스타벅스', color: '#16a34a', emoji: '☕' },
+  { id: '치킨',     label: '치킨',     color: '#ea580c', emoji: '🍗' },
+  { id: '5만원',    label: '5만원',    color: '#2563eb', emoji: '💙' },
+  { id: '꽝',       label: '꽝',       color: '#64748b', emoji: '😅' },
+  { id: '스타벅스', label: '스타벅스', color: '#15803d', emoji: '☕' },
+  { id: '치킨',     label: '치킨',     color: '#c2410c', emoji: '🍗' },
+]
+
+// ── 응모권 생성 API 호출 ─────────────────────────────
+async function createEntry(name, phone, consultId) {
+  const cleanPhone = phone.replace(/\D/g, '')
+  const payload = {
+    name,
+    phone:          cleanPhone,
+    consult_id:     consultId,
+    ref_staff:      state.ref_staff,
+    ref_staff_name: state.ref_staff_name,
+    invited_by:     state.invited_by
+  }
+
+  const res   = await fetch('/api/entry', {
+    method:  'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body:    JSON.stringify(payload)
+  })
+  const data  = await res.json()
+
+  // 응모권 상태 저장
+  state.roulette.phone      = cleanPhone
+  state.roulette.entryCount = data.entry_count || 1
+  state.roulette.played     = data.duplicate || false // 중복이면 이미 플레이한 것으로 처리
+
+  // 2초 후 룰렛 모달 열기 (완료 화면 먼저 보여주기)
+  setTimeout(() => openRouletteModal(), 1800)
+}
+
+// ── 룰렛 모달 열기 ───────────────────────────────────
+function openRouletteModal() {
+  const overlay = document.getElementById('roulette-overlay')
+  overlay.style.display = 'flex'
+
+  // 응모권 수 표시
+  document.getElementById('my-entry-count').textContent = state.roulette.entryCount
+  document.getElementById('invite-entry-display').textContent = state.roulette.entryCount
+
+  // 결과 화면 숨기고 룰렛 화면 보이기
+  document.getElementById('roulette-result-wrap').style.display = 'none'
+  document.getElementById('roulette-wheel-wrap').style.display  = 'flex'
+  document.getElementById('prize-list-mini').style.display      = 'grid'
+  document.getElementById('entry-status-box').style.display     = 'flex'
+
+  // 닫기 버튼 처음엔 숨김
+  document.getElementById('roulette-close-btn').style.display = 'none'
+
+  // 룰렛 바퀴 그리기
+  drawRouletteWheel(state.roulette.angle)
+
+  // 스핀 버튼 상태
+  const spinBtn = document.getElementById('roulette-spin-btn')
+  if (state.roulette.played) {
+    spinBtn.disabled = true
+    spinBtn.innerHTML = '<i class="fas fa-check"></i><br/><span>완료</span>'
+  } else {
+    spinBtn.disabled = false
+    spinBtn.innerHTML = '<i class="fas fa-play"></i><br/><span>돌리기</span>'
+  }
+}
+
+// ── 룰렛 모달 닫기 ───────────────────────────────────
+function closeRoulette() {
+  const overlay = document.getElementById('roulette-overlay')
+  overlay.style.display = 'none'
+}
+
+// ── 캔버스 룰렛 그리기 ───────────────────────────────
+function drawRouletteWheel(rotationAngle = 0) {
+  const canvas = document.getElementById('roulette-canvas')
+  if (!canvas) return
+  const ctx    = canvas.getContext('2d')
+  const n      = ROULETTE_SEGMENTS.length
+  const arc    = (2 * Math.PI) / n
+  const cx     = canvas.width  / 2
+  const cy     = canvas.height / 2
+  const r      = cx - 4
+
+  ctx.clearRect(0, 0, canvas.width, canvas.height)
+
+  ROULETTE_SEGMENTS.forEach((seg, i) => {
+    const start = rotationAngle + i * arc - Math.PI / 2
+    const end   = start + arc
+
+    // 파이 조각
+    ctx.beginPath()
+    ctx.moveTo(cx, cy)
+    ctx.arc(cx, cy, r, start, end)
+    ctx.closePath()
+    ctx.fillStyle   = seg.color
+    ctx.fill()
+    ctx.strokeStyle = '#fff'
+    ctx.lineWidth   = 2
+    ctx.stroke()
+
+    // 텍스트
+    ctx.save()
+    ctx.translate(cx, cy)
+    ctx.rotate(start + arc / 2)
+    ctx.textAlign    = 'right'
+    ctx.fillStyle    = '#fff'
+    ctx.font         = `bold ${canvas.width > 240 ? 13 : 11}px Noto Sans KR, sans-serif`
+    ctx.shadowColor  = 'rgba(0,0,0,.4)'
+    ctx.shadowBlur   = 3
+    ctx.fillText(seg.emoji + ' ' + seg.label, r - 10, 5)
+    ctx.restore()
+  })
+
+  // 중앙 원
+  ctx.beginPath()
+  ctx.arc(cx, cy, 28, 0, 2 * Math.PI)
+  ctx.fillStyle   = '#fff'
+  ctx.fill()
+  ctx.strokeStyle = '#e2e8f0'
+  ctx.lineWidth   = 3
+  ctx.stroke()
+}
+
+// ── 룰렛 스핀 ────────────────────────────────────────
+async function spinRoulette() {
+  if (state.roulette.spinning) return
+  if (state.roulette.played)   return
+
+  const phone   = state.roulette.phone
+  if (!phone)   return
+
+  const spinBtn = document.getElementById('roulette-spin-btn')
+  const canvas  = document.getElementById('roulette-canvas')
+  spinBtn.disabled = true
+  spinBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>'
+  state.roulette.spinning = true
+  canvas.classList.add('spinning')
+
+  try {
+    // 1. 서버에서 결과 결정
+    const res    = await fetch(`/api/roulette/${phone}`, { method: 'POST' })
+    const data   = await res.json()
+
+    if (!res.ok) {
+      // 이미 했거나 오류
+      showToast(data.error || '오류가 발생했습니다.', 'warn')
+      spinBtn.disabled = false
+      spinBtn.innerHTML = '<i class="fas fa-play"></i><br/><span>돌리기</span>'
+      state.roulette.spinning = false
+      canvas.classList.remove('spinning')
+      return
+    }
+
+    const resultId = data.result  // '꽝', '스타벅스', '치킨', '5만원', '10만원'
+    const label    = data.label
+
+    // 2. 결과 세그먼트 찾기 (일치하는 첫 번째)
+    const segIdx = ROULETTE_SEGMENTS.findIndex(s => s.id === resultId)
+    const targetSeg = segIdx >= 0 ? segIdx : 0
+
+    // 3. 목표 각도 계산
+    //    세그먼트 중앙이 상단(바늘 위치)에 오도록
+    const n           = ROULETTE_SEGMENTS.length
+    const arc         = (2 * Math.PI) / n
+    // 세그먼트 중앙 각도: 0기준에서 세그먼트가 위치한 각도 (top = -π/2 기준)
+    const segCenter   = targetSeg * arc + arc / 2
+    // 현재 각도에서 목표 각도까지: 최소 5바퀴 + 타겟
+    const spins       = 5 * 2 * Math.PI
+    const targetAngle = spins + (2 * Math.PI - segCenter)
+
+    // 4. 애니메이션
+    const duration = 4200 // ms
+    const startTime = performance.now()
+    const startAngle = state.roulette.angle
+
+    function animate(now) {
+      const elapsed  = now - startTime
+      const progress = Math.min(elapsed / duration, 1)
+      // easeOutCubic
+      const ease = 1 - Math.pow(1 - progress, 3)
+      const current = startAngle + targetAngle * ease
+
+      state.roulette.angle = current
+      drawRouletteWheel(current)
+
+      if (progress < 1) {
+        requestAnimationFrame(animate)
+      } else {
+        // 애니메이션 완료
+        canvas.classList.remove('spinning')
+        state.roulette.spinning = false
+        state.roulette.played   = true
+        state.roulette.result   = resultId
+        showRouletteResult(resultId, label)
+      }
+    }
+    requestAnimationFrame(animate)
+
+  } catch(e) {
+    showToast('오류가 발생했습니다. 다시 시도해 주세요.', 'error')
+    spinBtn.disabled = false
+    spinBtn.innerHTML = '<i class="fas fa-play"></i><br/><span>돌리기</span>'
+    state.roulette.spinning = false
+    canvas.classList.remove('spinning')
+  }
+}
+
+// ── 룰렛 결과 표시 ───────────────────────────────────
+function showRouletteResult(resultId, label) {
+  const isWin = resultId !== '꽝'
+
+  // 바퀴 & 상품목록 숨기기
+  document.getElementById('roulette-wheel-wrap').style.display = 'none'
+  document.getElementById('prize-list-mini').style.display     = 'none'
+  document.getElementById('entry-status-box').style.display    = 'none'
+
+  // 결과 표시
+  const resultWrap  = document.getElementById('roulette-result-wrap')
+  const iconEl      = document.getElementById('roulette-result-icon')
+  const labelEl     = document.getElementById('roulette-result-label')
+  const msgEl       = document.getElementById('roulette-result-msg')
+
+  const resultMap = {
+    '10만원':   { icon: '🏆', msg: '상담 신청 시 응모권이 등록되었습니다.\n7월 31일 당첨 여부를 문자로 알려드립니다.' },
+    '5만원':    { icon: '🎉', msg: '상담 신청 시 응모권이 등록되었습니다.\n7월 31일 당첨 여부를 문자로 알려드립니다.' },
+    '치킨':     { icon: '🍗', msg: '상담 신청 시 응모권이 등록되었습니다.\n7월 31일 당첨 여부를 문자로 알려드립니다.' },
+    '스타벅스': { icon: '☕', msg: '상담 신청 시 응모권이 등록되었습니다.\n7월 31일 당첨 여부를 문자로 알려드립니다.' },
+    '꽝':       { icon: '😅', msg: '아쉽지만 이번엔 꽝이에요.\n하지만 지인 초대로 추가 응모권을 받으세요!' }
+  }
+
+  const rm = resultMap[resultId] || resultMap['꽝']
+  iconEl.textContent  = rm.icon
+  labelEl.textContent = isWin ? `🎊 ${label} 응모권 등록!` : '아쉽게도 꽝!'
+  labelEl.className   = `roulette-result-label ${isWin ? 'won' : 'lost'}`
+  msgEl.textContent   = rm.msg
+
+  // 응모권 수 업데이트
+  document.getElementById('invite-entry-display').textContent = state.roulette.entryCount
+
+  resultWrap.style.display = 'block'
+
+  // 닫기 버튼 표시
+  document.getElementById('roulette-close-btn').style.display = 'flex'
+}
+
+// ── 지인 초대 링크 복사 ───────────────────────────────
+async function copyInviteLink() {
+  const phone = state.roulette.phone || document.getElementById('c_phone')?.value?.replace(/\D/g, '') || ''
+  const base  = `${location.origin}/?ref=${state.ref_staff}&rn=${encodeURIComponent(state.ref_staff_name)}&invitedBy=${phone}`
+  const btn   = document.querySelector('.invite-share-btn')
+
+  if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 링크 생성 중...' }
+
+  try {
+    const res  = await fetch('https://api-ssl.bitly.com/v4/shorten', {
+      method:  'POST',
+      headers: { 'Authorization': `Bearer ${BITLY_TOKEN}`, 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ long_url: base })
+    })
+    const data = await res.json()
+    const url  = data.link || base
+    await navigator.clipboard.writeText(url)
+    showToast('초대 링크가 복사되었습니다! 지인에게 공유해 보세요 📎')
+    if (btn) { btn.disabled = false; btn.innerHTML = `<i class="fas fa-check"></i> ${url}` }
+    setTimeout(() => { if (btn) btn.innerHTML = '<i class="fas fa-share-nodes"></i> 지인 초대 링크 복사' }, 4000)
+  } catch {
+    try { await navigator.clipboard.writeText(base); showToast('초대 링크 복사 완료!') }
+    catch { prompt('아래 링크를 복사하세요:', base) }
+    if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-share-nodes"></i> 지인 초대 링크 복사' }
   }
 }
 

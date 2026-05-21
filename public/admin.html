@@ -59,6 +59,9 @@
       <div class="menu-item" onclick="switchTab('settings')">
         <i class="fas fa-gear"></i> 사이트 설정
       </div>
+      <div class="menu-item" onclick="switchTab('event')">
+        <i class="fas fa-ticket"></i> 이벤트 관리
+      </div>
     </nav>
     <div class="sidebar-footer">
       <button id="logout-btn" onclick="doLogout()">
@@ -249,6 +252,92 @@
           <i class="fas fa-floppy-disk"></i> 설정 저장
         </button>
       </div>
+
+      <!-- ── 이벤트 관리 탭 ───────────────────────── -->
+      <div class="tab-panel" id="tab-event">
+
+        <!-- 이벤트 통계 카드 -->
+        <div class="stat-grid" id="event-stat-grid">
+          <div class="stat-card">
+            <div class="stat-icon blue"><i class="fas fa-ticket"></i></div>
+            <div class="stat-info">
+              <div class="stat-label">총 응모자</div>
+              <div class="stat-value" id="ev-total">0</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon purple"><i class="fas fa-user-plus"></i></div>
+            <div class="stat-info">
+              <div class="stat-label">초대 참여</div>
+              <div class="stat-value" id="ev-invited">0</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon green"><i class="fas fa-rotate"></i></div>
+            <div class="stat-info">
+              <div class="stat-label">룰렛 실행</div>
+              <div class="stat-value" id="ev-played">0</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon yellow"><i class="fas fa-crown"></i></div>
+            <div class="stat-info">
+              <div class="stat-label">총 응모권</div>
+              <div class="stat-value" id="ev-tickets">0</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 상품 설정 -->
+        <div class="section-header">
+          <h3><i class="fas fa-gift" style="color:#f59e0b"></i> 상품 설정</h3>
+          <button class="btn-add" onclick="savePrizes()">
+            <i class="fas fa-floppy-disk"></i> 저장
+          </button>
+        </div>
+        <div class="prize-config-grid" id="prize-config-grid">
+          <!-- admin.js에서 렌더링 -->
+        </div>
+
+        <!-- 응모권 목록 -->
+        <div class="section-header" style="margin-top:28px">
+          <h3><i class="fas fa-list" style="color:var(--primary)"></i> 응모권 목록</h3>
+          <div style="display:flex;gap:8px;align-items:center">
+            <input type="text" id="entry-search" placeholder="이름, 전화번호 검색..."
+              style="padding:7px 12px;border:1.5px solid var(--gray-200);border-radius:8px;font-size:.85rem;font-family:inherit;outline:none;width:200px"
+              oninput="renderEntries()" />
+            <button class="btn-excel" onclick="exportEntriesExcel()">
+              <i class="fas fa-file-excel"></i> 엑셀
+            </button>
+          </div>
+        </div>
+
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>신청일</th>
+                <th>이름</th>
+                <th>전화번호</th>
+                <th>유입 설계사</th>
+                <th>초대받은 경로</th>
+                <th>응모권 수</th>
+                <th>초대한 지인</th>
+                <th>룰렛 결과</th>
+                <th>룰렛 실행</th>
+              </tr>
+            </thead>
+            <tbody id="entry-tbody"></tbody>
+          </table>
+        </div>
+
+        <!-- 이벤트 기간 안내 -->
+        <div style="margin-top:16px;padding:14px 18px;background:var(--primary-bg);border:1px solid #bfdbfe;border-radius:10px;font-size:.82rem;color:var(--primary)">
+          <i class="fas fa-calendar-days"></i>
+          <strong>이벤트 기간:</strong> 2025년 5월 22일 ~ 2025년 7월 31일 | 실제 당첨 발표: 2025년 7월 31일 (문자 발송)
+        </div>
+
+      </div><!-- /tab-event -->
 
     </div><!-- /content-area -->
   </div><!-- /main-content -->
