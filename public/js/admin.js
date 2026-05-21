@@ -415,15 +415,19 @@ async function loadSettings() {
       const el = document.getElementById(`set-${item.id}`)
       if (el) el.value = item.value || ''
     })
+    // 상품 이미지 미리보기 초기 로드
+    const prize = data.find(d => d.id === 'prize_image')
+    if (prize && prize.value) updatePrizePreview(prize.value)
   } catch(e) {}
 }
 
 async function saveSettings() {
-  const ids = ['ad_review_no','ad_review_date','ad_review_org','compliance_text','privacy_url','footer_notice']
+  const ids = ['ad_review_no','ad_review_date','ad_review_org','compliance_text','privacy_url','footer_notice','prize_image']
   const labels = {
     ad_review_no: '광고심의필번호', ad_review_date: '심의일자',
     ad_review_org: '심의기관', compliance_text: '준법감시 문구',
-    privacy_url: '개인정보처리방침 URL', footer_notice: '하단 고지문구'
+    privacy_url: '개인정보처리방침 URL', footer_notice: '하단 고지문구',
+    prize_image: '추첨상품 이미지'
   }
   const payload = ids.map(id => ({
     id,
@@ -437,6 +441,110 @@ async function saveSettings() {
     body: JSON.stringify(payload)
   })
   showToast('설정이 저장되었습니다.', 'success')
+
+  // 미리보기 업데이트
+  const prizeUrl = document.getElementById('set-prize_image')?.value
+  updatePrizePreview(prizeUrl)
+}
+
+// ── 상품 이미지 URL 입력 시 미리보기 ─────────────
+;(function bindPrizeUrlInput() {
+  setTimeout(() => {
+    const el = document.getElementById('set-prize_image')
+    if (!el) return
+    el.addEventListener('input', () => updatePrizePreview(el.value))
+  }, 500)
+})()
+
+function updatePrizePreview(url) {
+  const wrap = document.getElementById('prize-preview-wrap')
+  const img  = document.getElementById('prize-preview-img')
+  if (!wrap || !img) return
+  if (url && url.trim()) {
+    img.src = url.trim()
+    wrap.style.display = 'block'
+  } else {
+    wrap.style.display = 'none'
+  }
+}
+
+function removePrizeImage() {
+  const el = document.getElementById('set-prize_image')
+  if (el) el.value = ''
+  updatePrizePreview('')
+}
+
+// ── 이미지 파일 업로드 (Base64 → Data URL 방식) ──
+async function uploadPrizeImage(input) {
+  const file = input.files[0]
+  if (!file) return
+
+  // 5MB 제한
+  if (file.size > 5 * 1024 * 1024) {
+    showToast('이미지 크기는 5MB 이하로 해주세요.', 'error')
+    return
+  }
+
+  const progress = document.getElementById('prize-upload-progress')
+  const bar      = document.getElementById('prize-bar')
+  const status   = document.getElementById('prize-upload-status')
+
+  progress.style.display = 'block'
+  bar.style.width = '30%'
+  status.textContent = '이미지 변환 중...'
+
+  try {
+    // FileReader로 Base64 변환
+    const dataUrl = await new Promise((resolve, reject) => {
+      const reader = new FileReader()
+      reader.onload  = e => resolve(e.target.result)
+      reader.onerror = reject
+      reader.readAsDataURL(file)
+    })
+
+    bar.style.width = '70%'
+    status.textContent = '이미지 리사이즈 중...'
+
+    // 이미지 리사이즈 (최대 400x400)
+    const resized = await resizeImage(dataUrl, 400, 400)
+
+    bar.style.width = '100%'
+    status.textContent = '완료!'
+
+    // URL 입력란에 적용
+    const urlEl = document.getElementById('set-prize_image')
+    if (urlEl) urlEl.value = resized
+    updatePrizePreview(resized)
+
+    setTimeout(() => { progress.style.display = 'none' }, 1000)
+    showToast('이미지가 적용되었습니다! 저장 버튼을 눌러 저장하세요.', 'success')
+  } catch(e) {
+    showToast('이미지 업로드 실패. 다시 시도해 주세요.', 'error')
+    progress.style.display = 'none'
+  }
+
+  input.value = '' // 파일 입력 초기화
+}
+
+// 이미지 리사이즈 헬퍼
+function resizeImage(dataUrl, maxW, maxH) {
+  return new Promise((resolve) => {
+    const img = new Image()
+    img.onload = () => {
+      let w = img.width, h = img.height
+      if (w > maxW || h > maxH) {
+        const ratio = Math.min(maxW/w, maxH/h)
+        w = Math.round(w * ratio)
+        h = Math.round(h * ratio)
+      }
+      const canvas = document.createElement('canvas')
+      canvas.width = w; canvas.height = h
+      const ctx = canvas.getContext('2d')
+      ctx.drawImage(img, 0, 0, w, h)
+      resolve(canvas.toDataURL('image/jpeg', 0.85))
+    }
+    img.src = dataUrl
+  })
 }
 
 // ── Excel Export ───────────────────────────────

@@ -499,3 +499,94 @@ body {
   .detail-grid { grid-template-columns: repeat(2, 1fr); }
   .settings-grid { grid-template-columns: 1fr; }
 }
+
+/* ── Prize Image Settings ─────────────────────── */
+.prize-settings-card {
+  background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+  border: 2px solid #fcd34d !important;
+}
+.prize-settings-card label {
+  color: #92400e !important;
+  font-size: .9rem !important;
+}
+.prize-settings-desc {
+  font-size: .8rem;
+  color: #b45309;
+  margin: -4px 0 12px;
+  line-height: 1.5;
+}
+.prize-input-wrap {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+.prize-input-wrap input {
+  flex: 1;
+  padding: 10px 14px;
+  border: 1.5px solid #fcd34d;
+  border-radius: 8px;
+  font-size: .875rem;
+  font-family: inherit;
+  outline: none;
+  background: #fff;
+  color: var(--gray-800);
+  transition: border-color .2s;
+}
+.prize-input-wrap input:focus { border-color: #f59e0b; box-shadow: 0 0 0 3px rgba(245,158,11,.15); }
+.prize-upload-btn {
+  white-space: nowrap;
+  padding: 10px 16px;
+  background: #f59e0b;
+  color: #fff;
+  border-radius: 8px;
+  font-size: .83rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: background .2s;
+}
+.prize-upload-btn:hover { background: #d97706; }
+.prize-preview-label { font-size: .78rem; font-weight: 600; color: #92400e; margin-bottom: 8px; }
+.prize-preview-img {
+  width: 120px;
+  height: 120px;
+  object-fit: cover;
+  border-radius: 10px;
+  border: 2px solid #fcd34d;
+  display: block;
+  margin-bottom: 10px;
+}
+.prize-remove-btn {
+  padding: 6px 14px;
+  background: #fef2f2;
+  color: var(--danger);
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  font-size: .8rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: background .2s;
+  font-family: inherit;
+}
+.prize-remove-btn:hover { background: #fee2e2; }
+.prize-upload-bar-wrap {
+  height: 6px;
+  background: #fde68a;
+  border-radius: 99px;
+  overflow: hidden;
+  margin-bottom: 6px;
+  margin-top: 10px;
+}
+.prize-upload-bar {
+  height: 100%;
+  background: #f59e0b;
+  border-radius: 99px;
+  width: 0%;
+  transition: width .3s;
+}
+.prize-upload-status { font-size: .78rem; color: #92400e; }
