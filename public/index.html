@@ -381,90 +381,209 @@
 </div><!-- /steps-area -->
 
 <!-- ══════════════════════════════════════
-     ROULETTE MODAL OVERLAY
+     ROULETTE MODAL OVERLAY (PREMIUM)
 ══════════════════════════════════════ -->
 <div id="roulette-overlay" class="roulette-overlay" style="display:none">
   <div class="roulette-modal">
 
-    <!-- 닫기 버튼 -->
-    <button class="roulette-close" id="roulette-close-btn" onclick="closeRoulette()" style="display:none">
+    <!-- 항상 보이는 닫기 버튼 -->
+    <button class="roulette-close" id="roulette-close-btn" onclick="closeRoulette()">
       <i class="fas fa-times"></i>
     </button>
 
-    <!-- 헤더 -->
-    <div class="roulette-header">
-      <div class="roulette-title-badge">
-        <i class="fas fa-gift"></i> 이벤트 응모권
-      </div>
-      <h2 class="roulette-title">추첨 룰렛 돌리기!</h2>
-      <p class="roulette-desc">상담 신청 완료! 🎉<br />재미로 룰렛을 돌려보세요. 실제 추첨은 <strong>7월 31일</strong>에 진행됩니다.</p>
-    </div>
+    <!-- ─── 화면 A: 룰렛 스핀 화면 ─── -->
+    <div id="roulette-screen-spin">
 
-    <!-- 응모권 현황 -->
-    <div class="entry-status-box" id="entry-status-box">
-      <div class="entry-status-item">
-        <div class="entry-status-icon"><i class="fas fa-ticket"></i></div>
-        <div class="entry-status-info">
-          <div class="entry-status-label">내 응모권</div>
-          <div class="entry-status-value"><span id="my-entry-count">1</span>장</div>
+      <!-- 헤더 배너 -->
+      <div class="rl-header">
+        <div class="rl-sparkles">✨</div>
+        <div class="rl-badge">🎁 이벤트 응모권 발급 완료!</div>
+        <h2 class="rl-title">행운의 룰렛을 돌려보세요</h2>
+        <p class="rl-desc">실제 추첨은 <strong>7월 31일</strong>에 진행됩니다.<br/>지금은 재미로 돌려보세요! 🍀</p>
+
+        <!-- 응모권 카운터 -->
+        <div class="rl-ticket-counter">
+          <div class="rl-ticket-icon">🎟️</div>
+          <div class="rl-ticket-info">
+            <span class="rl-ticket-label">내 응모권</span>
+            <span class="rl-ticket-value"><span id="my-entry-count">1</span>장</span>
+          </div>
+          <div class="rl-ticket-plus" id="rl-ticket-extra" style="display:none">
+            <span>+1</span><small>초대 보너스</small>
+          </div>
         </div>
       </div>
-      <div class="entry-status-item invite">
-        <div class="entry-status-icon"><i class="fas fa-user-plus"></i></div>
-        <div class="entry-status-info">
-          <div class="entry-status-label">지인 초대 보너스</div>
-          <div class="entry-status-value-sm">지인 초대 시 응모권 +1장</div>
+
+      <!-- 룰렛 바퀴 -->
+      <div class="rl-wheel-container" id="roulette-wheel-wrap">
+        <!-- 상단 포인터 -->
+        <div class="rl-pointer-wrap">
+          <div class="rl-pointer"></div>
+          <div class="rl-pointer-shadow"></div>
+        </div>
+
+        <!-- 외곽 링 -->
+        <div class="rl-outer-ring">
+          <canvas id="roulette-canvas" width="300" height="300"></canvas>
+          <!-- 중심 버튼 -->
+          <button class="rl-center-btn" id="roulette-spin-btn" onclick="spinRoulette()">
+            <div class="rl-center-inner">
+              <i class="fas fa-play" id="spin-icon"></i>
+              <span id="spin-label">SPIN</span>
+            </div>
+          </button>
         </div>
       </div>
-    </div>
 
-    <!-- 룰렛 바퀴 영역 -->
-    <div class="roulette-wheel-wrap" id="roulette-wheel-wrap">
+      <!-- 상품 그리드 (이미지 카드) -->
+      <div class="rl-prize-grid">
+        <div class="rl-prize-card gold">
+          <div class="rl-prize-img">
+            <!-- 상품권 10만원 SVG -->
+            <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+              <rect x="2" y="10" width="44" height="28" rx="5" fill="url(#g10)" stroke="#d97706" stroke-width="1.5"/>
+              <defs><linearGradient id="g10" x1="0" y1="0" x2="44" y2="28" gradientUnits="userSpaceOnUse"><stop stop-color="#fef3c7"/><stop offset="1" stop-color="#fde68a"/></linearGradient></defs>
+              <circle cx="2" cy="24" r="5" fill="#f8fafc" stroke="#d97706" stroke-width="1.5"/>
+              <circle cx="46" cy="24" r="5" fill="#f8fafc" stroke="#d97706" stroke-width="1.5"/>
+              <text x="24" y="21" text-anchor="middle" font-size="7" font-weight="bold" fill="#92400e" font-family="sans-serif">상품권</text>
+              <text x="24" y="32" text-anchor="middle" font-size="11" font-weight="900" fill="#92400e" font-family="sans-serif">100,000</text>
+              <text x="24" y="35" text-anchor="middle" font-size="4.5" fill="#b45309" font-family="sans-serif">원</text>
+              <rect x="8" y="13" width="32" height="1.5" rx="1" fill="#f59e0b" opacity="0.4"/>
+              <rect x="8" y="33.5" width="32" height="1.5" rx="1" fill="#f59e0b" opacity="0.4"/>
+            </svg>
+          </div>
+          <div class="rl-prize-name">상품권 10만원</div>
+          <div class="rl-prize-cnt">10명</div>
+        </div>
 
-      <!-- 중앙 바늘/포인터 -->
-      <div class="roulette-pointer">▼</div>
+        <div class="rl-prize-card silver">
+          <div class="rl-prize-img">
+            <!-- 상품권 5만원 SVG -->
+            <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+              <rect x="2" y="10" width="44" height="28" rx="5" fill="url(#g5)" stroke="#6366f1" stroke-width="1.5"/>
+              <defs><linearGradient id="g5" x1="0" y1="0" x2="44" y2="28" gradientUnits="userSpaceOnUse"><stop stop-color="#ede9fe"/><stop offset="1" stop-color="#ddd6fe"/></linearGradient></defs>
+              <circle cx="2" cy="24" r="5" fill="#f8fafc" stroke="#6366f1" stroke-width="1.5"/>
+              <circle cx="46" cy="24" r="5" fill="#f8fafc" stroke="#6366f1" stroke-width="1.5"/>
+              <text x="24" y="21" text-anchor="middle" font-size="7" font-weight="bold" fill="#4338ca" font-family="sans-serif">상품권</text>
+              <text x="24" y="32" text-anchor="middle" font-size="11" font-weight="900" fill="#4338ca" font-family="sans-serif">50,000</text>
+              <text x="24" y="35" text-anchor="middle" font-size="4.5" fill="#4f46e5" font-family="sans-serif">원</text>
+              <rect x="8" y="13" width="32" height="1.5" rx="1" fill="#818cf8" opacity="0.4"/>
+              <rect x="8" y="33.5" width="32" height="1.5" rx="1" fill="#818cf8" opacity="0.4"/>
+            </svg>
+          </div>
+          <div class="rl-prize-name">상품권 5만원</div>
+          <div class="rl-prize-cnt">20명</div>
+        </div>
 
-      <!-- 캔버스 룰렛 -->
-      <canvas id="roulette-canvas" width="280" height="280"></canvas>
+        <div class="rl-prize-card chicken">
+          <div class="rl-prize-img">
+            <!-- 치킨 기프티콘 이모지 스타일 -->
+            <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+              <rect x="2" y="6" width="44" height="36" rx="6" fill="url(#gck)" stroke="#ea580c" stroke-width="1.5"/>
+              <defs><linearGradient id="gck" x1="0" y1="0" x2="44" y2="36" gradientUnits="userSpaceOnUse"><stop stop-color="#fff7ed"/><stop offset="1" stop-color="#fed7aa"/></linearGradient></defs>
+              <text x="24" y="28" text-anchor="middle" font-size="22" font-family="serif">🍗</text>
+              <rect x="4" y="35" width="40" height="5" rx="0 0 5 5" fill="#ea580c" opacity="0.15"/>
+              <text x="24" y="39" text-anchor="middle" font-size="5.5" font-weight="bold" fill="#c2410c" font-family="sans-serif">치킨 기프티콘</text>
+            </svg>
+          </div>
+          <div class="rl-prize-name">치킨 기프티콘</div>
+          <div class="rl-prize-cnt">20명</div>
+        </div>
 
-      <!-- 스핀 버튼 (캔버스 중심) -->
-      <button class="roulette-spin-center" id="roulette-spin-btn" onclick="spinRoulette()">
-        <i class="fas fa-play"></i><br/><span>돌리기</span>
-      </button>
-    </div>
-
-    <!-- 상품 목록 안내 -->
-    <div class="prize-list-mini">
-      <div class="prize-mini-item p10"><i class="fas fa-crown"></i> 상품권 10만원 — 10명</div>
-      <div class="prize-mini-item p5"><i class="fas fa-star"></i> 상품권 5만원 — 20명</div>
-      <div class="prize-mini-item chicken"><i class="fas fa-drumstick-bite"></i> 치킨 기프티콘 — 20명</div>
-      <div class="prize-mini-item sbux"><i class="fas fa-coffee"></i> 스타벅스 — 50명</div>
-    </div>
-
-    <!-- 결과 화면 (스핀 후 표시) -->
-    <div class="roulette-result-wrap" id="roulette-result-wrap" style="display:none">
-      <div class="roulette-result-icon" id="roulette-result-icon">🎉</div>
-      <div class="roulette-result-label" id="roulette-result-label">결과</div>
-      <div class="roulette-result-msg" id="roulette-result-msg"></div>
-      <div class="roulette-result-sub">
-        실제 당첨 발표는 <strong>2025년 7월 31일</strong>에 문자로 안내드립니다.<br />
-        응모권이 많을수록 당첨 확률이 높아집니다!
+        <div class="rl-prize-card coffee">
+          <div class="rl-prize-img">
+            <!-- 스타벅스 기프티콘 -->
+            <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+              <rect x="2" y="6" width="44" height="36" rx="6" fill="url(#gsb)" stroke="#15803d" stroke-width="1.5"/>
+              <defs><linearGradient id="gsb" x1="0" y1="0" x2="44" y2="36" gradientUnits="userSpaceOnUse"><stop stop-color="#f0fdf4"/><stop offset="1" stop-color="#bbf7d0"/></linearGradient></defs>
+              <text x="24" y="28" text-anchor="middle" font-size="22" font-family="serif">☕</text>
+              <rect x="4" y="35" width="40" height="5" rx="0 0 5 5" fill="#15803d" opacity="0.15"/>
+              <text x="24" y="39" text-anchor="middle" font-size="5.5" font-weight="bold" fill="#15803d" font-family="sans-serif">스타벅스 기프티콘</text>
+            </svg>
+          </div>
+          <div class="rl-prize-name">스타벅스</div>
+          <div class="rl-prize-cnt">50명</div>
+        </div>
       </div>
 
-      <!-- 지인 초대 CTA -->
-      <div class="invite-cta-box" id="invite-cta-box">
-        <div class="invite-cta-title"><i class="fas fa-user-plus"></i> 지인 초대하면 응모권 +1장!</div>
-        <div class="invite-cta-desc">아래 링크를 지인에게 공유하면 지인이 테스트 완료 시<br/>내 응모권이 1장 추가됩니다.</div>
-        <button class="invite-share-btn" onclick="copyInviteLink()">
-          <i class="fas fa-share-nodes"></i> 지인 초대 링크 복사
+      <!-- 초대 CTA (스핀 전부터 항상 표시) -->
+      <div class="rl-invite-pre">
+        <div class="rl-invite-pre-inner">
+          <div class="rl-invite-pre-left">
+            <div class="rl-invite-pre-badge">+1장</div>
+            <div>
+              <div class="rl-invite-pre-title">지인 초대 시 응모권 추가!</div>
+              <div class="rl-invite-pre-sub">지인이 테스트 완료하면 내 응모권 +1장</div>
+            </div>
+          </div>
+          <button class="rl-invite-pre-btn" onclick="copyInviteLink()">
+            <i class="fas fa-share-nodes"></i> 공유
+          </button>
+        </div>
+      </div>
+
+    </div><!-- /roulette-screen-spin -->
+
+    <!-- ─── 화면 B: 결과 화면 ─── -->
+    <div id="roulette-screen-result" style="display:none">
+
+      <!-- 결과 헤더 -->
+      <div class="rl-result-header" id="rl-result-header">
+        <!-- JS에서 동적 렌더링 -->
+      </div>
+
+      <!-- 응모권 현황 카드 -->
+      <div class="rl-result-ticket-card">
+        <div class="rl-rtc-left">
+          <div class="rl-rtc-emoji">🎟️</div>
+          <div>
+            <div class="rl-rtc-label">현재 보유 응모권</div>
+            <div class="rl-rtc-value"><span id="result-entry-count">1</span>장</div>
+          </div>
+        </div>
+        <div class="rl-rtc-right">
+          <div class="rl-rtc-date-label">당첨 발표일</div>
+          <div class="rl-rtc-date">2025. 7. 31</div>
+        </div>
+      </div>
+
+      <!-- 당첨 상품 이미지 영역 -->
+      <div class="rl-result-prize-area" id="rl-result-prize-area">
+        <!-- JS 동적 렌더링 -->
+      </div>
+
+      <!-- 안내 문구 -->
+      <div class="rl-result-notice">
+        <i class="fas fa-circle-info"></i>
+        응모권이 많을수록 당첨 확률이 높아집니다.<br/>
+        지인을 초대해서 응모권을 더 받아보세요!
+      </div>
+
+      <!-- 지인 초대 CTA (결과 후 강조) -->
+      <div class="rl-invite-post">
+        <div class="rl-invite-post-title">
+          <span class="rl-invite-fire">🔥</span>
+          지인 초대하면 응모권 +1장 추가!
+        </div>
+        <div class="rl-invite-post-desc">
+          내 전용 링크로 지인이 테스트를 완료하면<br/>
+          <strong>내 응모권이 자동으로 1장 추가</strong>됩니다.
+        </div>
+        <button class="rl-invite-post-btn" onclick="copyInviteLink()">
+          <i class="fas fa-link"></i>
+          <span>초대 링크 복사하기</span>
+          <span class="rl-invite-badge">+1장</span>
         </button>
-        <div class="invite-count-info">현재 내 응모권: <strong id="invite-entry-display">1</strong>장</div>
+        <div class="rl-invite-post-count">
+          현재 내 응모권: <strong><span id="invite-entry-display">1</span>장</strong>
+        </div>
       </div>
 
-      <button class="roulette-done-btn" onclick="closeRoulette()">
-        <i class="fas fa-check"></i> 확인 완료
+      <button class="rl-done-btn" onclick="closeRoulette()">
+        <i class="fas fa-check-circle"></i> 확인했습니다
       </button>
-    </div>
+
+    </div><!-- /roulette-screen-result -->
 
   </div>
 </div>

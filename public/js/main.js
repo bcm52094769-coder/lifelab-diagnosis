@@ -633,14 +633,14 @@ async function submitConsultation() {
 
 // ── 룰렛 상품 정의 (캔버스 렌더링용) ─────────────────
 const ROULETTE_SEGMENTS = [
-  { id: '10만원',   label: '10만원',   color: '#f59e0b', emoji: '🏆' },
-  { id: '꽝',       label: '꽝',       color: '#94a3b8', emoji: '😅' },
-  { id: '스타벅스', label: '스타벅스', color: '#16a34a', emoji: '☕' },
-  { id: '치킨',     label: '치킨',     color: '#ea580c', emoji: '🍗' },
-  { id: '5만원',    label: '5만원',    color: '#2563eb', emoji: '💙' },
-  { id: '꽝',       label: '꽝',       color: '#64748b', emoji: '😅' },
-  { id: '스타벅스', label: '스타벅스', color: '#15803d', emoji: '☕' },
-  { id: '치킨',     label: '치킨',     color: '#c2410c', emoji: '🍗' },
+  { id: '10만원',   label: '10만원',   emoji: '🏆', color: '#fbbf24', colorDark: '#d97706' },
+  { id: '꽝',       label: '꽝',       emoji: '😅', color: '#64748b', colorDark: '#475569' },
+  { id: '스타벅스', label: '스타벅스', emoji: '☕', color: '#10b981', colorDark: '#059669' },
+  { id: '치킨',     label: '치킨',     emoji: '🍗', color: '#f97316', colorDark: '#ea580c' },
+  { id: '5만원',    label: '5만원',    emoji: '🎁', color: '#6366f1', colorDark: '#4f46e5' },
+  { id: '꽝',       label: '꽝',       emoji: '😅', color: '#94a3b8', colorDark: '#64748b' },
+  { id: '스타벅스', label: '스타벅스', emoji: '☕', color: '#34d399', colorDark: '#10b981' },
+  { id: '치킨',     label: '치킨',     emoji: '🍗', color: '#fb923c', colorDark: '#f97316' },
 ]
 
 // ── 응모권 생성 API 호출 ─────────────────────────────
@@ -677,29 +677,30 @@ function openRouletteModal() {
   overlay.style.display = 'flex'
 
   // 응모권 수 표시
-  document.getElementById('my-entry-count').textContent = state.roulette.entryCount
+  document.getElementById('my-entry-count').textContent      = state.roulette.entryCount
   document.getElementById('invite-entry-display').textContent = state.roulette.entryCount
 
-  // 결과 화면 숨기고 룰렛 화면 보이기
-  document.getElementById('roulette-result-wrap').style.display = 'none'
-  document.getElementById('roulette-wheel-wrap').style.display  = 'flex'
-  document.getElementById('prize-list-mini').style.display      = 'grid'
-  document.getElementById('entry-status-box').style.display     = 'flex'
+  // 화면 A(스핀) 표시 / 화면 B(결과) 숨김
+  document.getElementById('roulette-screen-spin').style.display   = 'block'
+  document.getElementById('roulette-screen-result').style.display = 'none'
 
-  // 닫기 버튼 처음엔 숨김
-  document.getElementById('roulette-close-btn').style.display = 'none'
+  // X 닫기 버튼은 항상 표시 (style.display 변경 불필요)
 
   // 룰렛 바퀴 그리기
   drawRouletteWheel(state.roulette.angle)
 
-  // 스핀 버튼 상태
-  const spinBtn = document.getElementById('roulette-spin-btn')
+  // 스핀 버튼 상태 (이미 플레이했다면 비활성화)
+  const spinBtn  = document.getElementById('roulette-spin-btn')
+  const spinIcon = document.getElementById('spin-icon')
+  const spinLbl  = document.getElementById('spin-label')
   if (state.roulette.played) {
     spinBtn.disabled = true
-    spinBtn.innerHTML = '<i class="fas fa-check"></i><br/><span>완료</span>'
+    if (spinIcon) { spinIcon.className = 'fas fa-check'; }
+    if (spinLbl)  { spinLbl.textContent = '완료'; }
   } else {
     spinBtn.disabled = false
-    spinBtn.innerHTML = '<i class="fas fa-play"></i><br/><span>돌리기</span>'
+    if (spinIcon) { spinIcon.className = 'fas fa-play'; }
+    if (spinLbl)  { spinLbl.textContent = 'SPIN'; }
   }
 }
 
@@ -718,45 +719,66 @@ function drawRouletteWheel(rotationAngle = 0) {
   const arc    = (2 * Math.PI) / n
   const cx     = canvas.width  / 2
   const cy     = canvas.height / 2
-  const r      = cx - 4
+  const r      = cx - 2    // 캔버스 300x300 기준
 
   ctx.clearRect(0, 0, canvas.width, canvas.height)
 
   ROULETTE_SEGMENTS.forEach((seg, i) => {
     const start = rotationAngle + i * arc - Math.PI / 2
     const end   = start + arc
+    const mid   = start + arc / 2
 
-    // 파이 조각
+    // ── 파이 조각 (그라디언트 효과) ──
+    const grad = ctx.createLinearGradient(
+      cx + Math.cos(mid) * (r * 0.3), cy + Math.sin(mid) * (r * 0.3),
+      cx + Math.cos(mid) * r,         cy + Math.sin(mid) * r
+    )
+    grad.addColorStop(0, seg.color)
+    grad.addColorStop(1, seg.colorDark || seg.color)
+
     ctx.beginPath()
     ctx.moveTo(cx, cy)
     ctx.arc(cx, cy, r, start, end)
     ctx.closePath()
-    ctx.fillStyle   = seg.color
+    ctx.fillStyle   = grad
     ctx.fill()
-    ctx.strokeStyle = '#fff'
-    ctx.lineWidth   = 2
+
+    // 구분선 (진한 테두리)
+    ctx.beginPath()
+    ctx.moveTo(cx, cy)
+    ctx.arc(cx, cy, r, start, end)
+    ctx.closePath()
+    ctx.strokeStyle = 'rgba(255,255,255,.35)'
+    ctx.lineWidth   = 2.5
     ctx.stroke()
 
-    // 텍스트
+    // ── 텍스트 ──
     ctx.save()
     ctx.translate(cx, cy)
-    ctx.rotate(start + arc / 2)
+    ctx.rotate(mid)
     ctx.textAlign    = 'right'
+
+    // 이모지
+    ctx.font         = `${canvas.width > 260 ? 16 : 13}px serif`
+    ctx.shadowColor  = 'rgba(0,0,0,.5)'
+    ctx.shadowBlur   = 4
     ctx.fillStyle    = '#fff'
-    ctx.font         = `bold ${canvas.width > 240 ? 13 : 11}px Noto Sans KR, sans-serif`
-    ctx.shadowColor  = 'rgba(0,0,0,.4)'
+    ctx.fillText(seg.emoji, r - 36, -2)
+
+    // 라벨
+    ctx.font         = `bold ${canvas.width > 260 ? 12 : 10}px Noto Sans KR, sans-serif`
     ctx.shadowBlur   = 3
-    ctx.fillText(seg.emoji + ' ' + seg.label, r - 10, 5)
+    ctx.fillText(seg.label, r - 10, 5)
     ctx.restore()
   })
 
-  // 중앙 원
+  // 중앙 투명 원 (HTML 버튼이 위에 올라오므로 베이스만)
   ctx.beginPath()
-  ctx.arc(cx, cy, 28, 0, 2 * Math.PI)
-  ctx.fillStyle   = '#fff'
+  ctx.arc(cx, cy, 38, 0, 2 * Math.PI)
+  ctx.fillStyle   = 'rgba(15,23,42,0.85)'
   ctx.fill()
-  ctx.strokeStyle = '#e2e8f0'
-  ctx.lineWidth   = 3
+  ctx.strokeStyle = 'rgba(255,255,255,.15)'
+  ctx.lineWidth   = 2
   ctx.stroke()
 }
 
@@ -768,10 +790,13 @@ async function spinRoulette() {
   const phone   = state.roulette.phone
   if (!phone)   return
 
-  const spinBtn = document.getElementById('roulette-spin-btn')
-  const canvas  = document.getElementById('roulette-canvas')
+  const spinBtn  = document.getElementById('roulette-spin-btn')
+  const canvas   = document.getElementById('roulette-canvas')
+  const spinIcon = document.getElementById('spin-icon')
+  const spinLbl  = document.getElementById('spin-label')
   spinBtn.disabled = true
-  spinBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>'
+  if (spinIcon) { spinIcon.className = 'fas fa-spinner fa-spin'; }
+  if (spinLbl)  { spinLbl.textContent = ''; }
   state.roulette.spinning = true
   canvas.classList.add('spinning')
 
@@ -784,7 +809,10 @@ async function spinRoulette() {
       // 이미 했거나 오류
       showToast(data.error || '오류가 발생했습니다.', 'warn')
       spinBtn.disabled = false
-      spinBtn.innerHTML = '<i class="fas fa-play"></i><br/><span>돌리기</span>'
+      const si = document.getElementById('spin-icon')
+      const sl = document.getElementById('spin-label')
+      if (si) si.className = 'fas fa-play'
+      if (sl) sl.textContent = 'SPIN'
       state.roulette.spinning = false
       canvas.classList.remove('spinning')
       return
@@ -838,58 +866,118 @@ async function spinRoulette() {
   } catch(e) {
     showToast('오류가 발생했습니다. 다시 시도해 주세요.', 'error')
     spinBtn.disabled = false
-    spinBtn.innerHTML = '<i class="fas fa-play"></i><br/><span>돌리기</span>'
+    const si2 = document.getElementById('spin-icon')
+    const sl2 = document.getElementById('spin-label')
+    if (si2) si2.className = 'fas fa-play'
+    if (sl2) sl2.textContent = 'SPIN'
     state.roulette.spinning = false
     canvas.classList.remove('spinning')
   }
 }
 
-// ── 룰렛 결과 표시 ───────────────────────────────────
+// ── 룰렛 결과 표시 (신규 2스크린 구조) ──────────────
 function showRouletteResult(resultId, label) {
   const isWin = resultId !== '꽝'
 
-  // 바퀴 & 상품목록 숨기기
-  document.getElementById('roulette-wheel-wrap').style.display = 'none'
-  document.getElementById('prize-list-mini').style.display     = 'none'
-  document.getElementById('entry-status-box').style.display    = 'none'
+  // 화면 A 숨기기, 화면 B 표시
+  document.getElementById('roulette-screen-spin').style.display   = 'none'
+  document.getElementById('roulette-screen-result').style.display = 'block'
 
-  // 결과 표시
-  const resultWrap  = document.getElementById('roulette-result-wrap')
-  const iconEl      = document.getElementById('roulette-result-icon')
-  const labelEl     = document.getElementById('roulette-result-label')
-  const msgEl       = document.getElementById('roulette-result-msg')
-
+  // ── 결과 헤더 동적 렌더링 ──
   const resultMap = {
-    '10만원':   { icon: '🏆', msg: '상담 신청 시 응모권이 등록되었습니다.\n7월 31일 당첨 여부를 문자로 알려드립니다.' },
-    '5만원':    { icon: '🎉', msg: '상담 신청 시 응모권이 등록되었습니다.\n7월 31일 당첨 여부를 문자로 알려드립니다.' },
-    '치킨':     { icon: '🍗', msg: '상담 신청 시 응모권이 등록되었습니다.\n7월 31일 당첨 여부를 문자로 알려드립니다.' },
-    '스타벅스': { icon: '☕', msg: '상담 신청 시 응모권이 등록되었습니다.\n7월 31일 당첨 여부를 문자로 알려드립니다.' },
-    '꽝':       { icon: '😅', msg: '아쉽지만 이번엔 꽝이에요.\n하지만 지인 초대로 추가 응모권을 받으세요!' }
+    '10만원':   { icon: '🏆', title: '상품권 10만원 응모 등록!',  msg: '실제 추첨은 7월 31일에 진행됩니다.\n당첨 시 문자로 알려드립니다.' },
+    '5만원':    { icon: '🎉', title: '상품권 5만원 응모 등록!',   msg: '실제 추첨은 7월 31일에 진행됩니다.\n당첨 시 문자로 알려드립니다.' },
+    '치킨':     { icon: '🍗', title: '치킨 기프티콘 응모 등록!', msg: '실제 추첨은 7월 31일에 진행됩니다.\n당첨 시 문자로 알려드립니다.' },
+    '스타벅스': { icon: '☕', title: '스타벅스 응모 등록!',      msg: '실제 추첨은 7월 31일에 진행됩니다.\n당첨 시 문자로 알려드립니다.' },
+    '꽝':       { icon: '😅', title: '아쉽게도 꽝!',             msg: '지인 초대로 응모권을 추가로 받으세요!\n더 많은 응모권 = 더 높은 당첨 확률!' }
   }
-
   const rm = resultMap[resultId] || resultMap['꽝']
-  iconEl.textContent  = rm.icon
-  labelEl.textContent = isWin ? `🎊 ${label} 응모권 등록!` : '아쉽게도 꽝!'
-  labelEl.className   = `roulette-result-label ${isWin ? 'won' : 'lost'}`
-  msgEl.textContent   = rm.msg
 
-  // 응모권 수 업데이트
-  document.getElementById('invite-entry-display').textContent = state.roulette.entryCount
+  const headerEl = document.getElementById('rl-result-header')
+  headerEl.innerHTML = `
+    <span class="rl-result-icon-wrap">${rm.icon}</span>
+    <div class="rl-result-label ${isWin ? 'won' : 'lost'}">${rm.title}</div>
+    <div class="rl-result-msg">${rm.msg.replace(/\n/g, '<br/>')}</div>
+  `
 
-  resultWrap.style.display = 'block'
+  // ── 응모권 수 업데이트 ──
+  const cnt = state.roulette.entryCount
+  const resultCntEl = document.getElementById('result-entry-count')
+  const inviteDispEl = document.getElementById('invite-entry-display')
+  if (resultCntEl)  resultCntEl.textContent  = cnt
+  if (inviteDispEl) inviteDispEl.textContent = cnt
 
-  // 닫기 버튼 표시
-  document.getElementById('roulette-close-btn').style.display = 'flex'
+  // ── 상품 이미지 영역 렌더링 ──
+  const prizeArea = document.getElementById('rl-result-prize-area')
+  if (prizeArea) {
+    if (isWin) {
+      const prizeImgMap = {
+        '10만원': `<svg width="80" height="80" viewBox="0 0 80 80" fill="none">
+          <rect x="4" y="16" width="72" height="48" rx="8" fill="url(#rp10)" stroke="#d97706" stroke-width="2"/>
+          <defs><linearGradient id="rp10" x1="0" y1="0" x2="72" y2="48" gradientUnits="userSpaceOnUse"><stop stop-color="#fef3c7"/><stop offset="1" stop-color="#fde68a"/></linearGradient></defs>
+          <circle cx="4" cy="40" r="9" fill="#0f172a" stroke="#d97706" stroke-width="2"/>
+          <circle cx="76" cy="40" r="9" fill="#0f172a" stroke="#d97706" stroke-width="2"/>
+          <text x="40" y="34" text-anchor="middle" font-size="11" font-weight="bold" fill="#92400e" font-family="sans-serif">상품권</text>
+          <text x="40" y="52" text-anchor="middle" font-size="18" font-weight="900" fill="#92400e" font-family="sans-serif">100,000</text>
+          <text x="40" y="59" text-anchor="middle" font-size="8" fill="#b45309" font-family="sans-serif">원</text>
+          <rect x="14" y="20" width="52" height="2" rx="1" fill="#f59e0b" opacity="0.5"/>
+          <rect x="14" y="58" width="52" height="2" rx="1" fill="#f59e0b" opacity="0.5"/>
+        </svg>`,
+        '5만원': `<svg width="80" height="80" viewBox="0 0 80 80" fill="none">
+          <rect x="4" y="16" width="72" height="48" rx="8" fill="url(#rp5)" stroke="#6366f1" stroke-width="2"/>
+          <defs><linearGradient id="rp5" x1="0" y1="0" x2="72" y2="48" gradientUnits="userSpaceOnUse"><stop stop-color="#ede9fe"/><stop offset="1" stop-color="#ddd6fe"/></linearGradient></defs>
+          <circle cx="4" cy="40" r="9" fill="#0f172a" stroke="#6366f1" stroke-width="2"/>
+          <circle cx="76" cy="40" r="9" fill="#0f172a" stroke="#6366f1" stroke-width="2"/>
+          <text x="40" y="34" text-anchor="middle" font-size="11" font-weight="bold" fill="#4338ca" font-family="sans-serif">상품권</text>
+          <text x="40" y="52" text-anchor="middle" font-size="18" font-weight="900" fill="#4338ca" font-family="sans-serif">50,000</text>
+          <text x="40" y="59" text-anchor="middle" font-size="8" fill="#4f46e5" font-family="sans-serif">원</text>
+          <rect x="14" y="20" width="52" height="2" rx="1" fill="#818cf8" opacity="0.5"/>
+          <rect x="14" y="58" width="52" height="2" rx="1" fill="#818cf8" opacity="0.5"/>
+        </svg>`,
+        '치킨': `<svg width="80" height="80" viewBox="0 0 80 80" fill="none">
+          <rect x="4" y="10" width="72" height="60" rx="10" fill="url(#rpck)" stroke="#ea580c" stroke-width="2"/>
+          <defs><linearGradient id="rpck" x1="0" y1="0" x2="72" y2="60" gradientUnits="userSpaceOnUse"><stop stop-color="#fff7ed"/><stop offset="1" stop-color="#fed7aa"/></linearGradient></defs>
+          <text x="40" y="50" text-anchor="middle" font-size="34" font-family="serif">🍗</text>
+          <rect x="4" y="58" width="72" height="12" rx="0 0 10 10" fill="#ea580c" opacity="0.2"/>
+          <text x="40" y="67" text-anchor="middle" font-size="9" font-weight="bold" fill="#c2410c" font-family="sans-serif">치킨 기프티콘</text>
+        </svg>`,
+        '스타벅스': `<svg width="80" height="80" viewBox="0 0 80 80" fill="none">
+          <rect x="4" y="10" width="72" height="60" rx="10" fill="url(#rpsb)" stroke="#15803d" stroke-width="2"/>
+          <defs><linearGradient id="rpsb" x1="0" y1="0" x2="72" y2="60" gradientUnits="userSpaceOnUse"><stop stop-color="#f0fdf4"/><stop offset="1" stop-color="#bbf7d0"/></linearGradient></defs>
+          <text x="40" y="50" text-anchor="middle" font-size="34" font-family="serif">☕</text>
+          <rect x="4" y="58" width="72" height="12" rx="0 0 10 10" fill="#15803d" opacity="0.2"/>
+          <text x="40" y="67" text-anchor="middle" font-size="9" font-weight="bold" fill="#15803d" font-family="sans-serif">스타벅스 기프티콘</text>
+        </svg>`
+      }
+      prizeArea.innerHTML = `
+        <div class="rl-result-prize-won">
+          <div class="rp-svg-wrap">${prizeImgMap[resultId] || ''}</div>
+          <div class="rl-result-prize-title">${label} 당첨!</div>
+          <div class="rl-result-prize-subtitle">응모권이 등록되었습니다 🎟️</div>
+        </div>
+      `
+    } else {
+      prizeArea.innerHTML = `
+        <div class="rl-result-miss">
+          <div class="rp-miss-icon">😅</div>
+          <p>이번엔 아쉽게 꽝이에요.<br/>하지만 <strong style="color:#fbbf24">응모권</strong>은 유효합니다!</p>
+        </div>
+      `
+    }
+  }
 }
 
 // ── 지인 초대 링크 복사 ───────────────────────────────
 async function copyInviteLink() {
+  // 본인 전화번호 기반 초대 링크 생성 (invitedBy = 본인 전화번호)
   const phone = state.roulette.phone || document.getElementById('c_phone')?.value?.replace(/\D/g, '') || ''
   const base  = `${location.origin}/?ref=${state.ref_staff}&rn=${encodeURIComponent(state.ref_staff_name)}&invitedBy=${phone}`
-  const btn   = document.querySelector('.invite-share-btn')
 
-  if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 링크 생성 중...' }
+  // 모달 내 모든 초대 버튼 (스핀 전/후) 일괄 상태 변경
+  const allInviteBtns = document.querySelectorAll('.rl-invite-pre-btn, .rl-invite-post-btn')
+  allInviteBtns.forEach(b => { b.disabled = true; b.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 생성 중...' })
 
+  let finalUrl = base
   try {
     const res  = await fetch('https://api-ssl.bitly.com/v4/shorten', {
       method:  'POST',
@@ -897,16 +985,21 @@ async function copyInviteLink() {
       body:    JSON.stringify({ long_url: base })
     })
     const data = await res.json()
-    const url  = data.link || base
-    await navigator.clipboard.writeText(url)
-    showToast('초대 링크가 복사되었습니다! 지인에게 공유해 보세요 📎')
-    if (btn) { btn.disabled = false; btn.innerHTML = `<i class="fas fa-check"></i> ${url}` }
-    setTimeout(() => { if (btn) btn.innerHTML = '<i class="fas fa-share-nodes"></i> 지인 초대 링크 복사' }, 4000)
-  } catch {
-    try { await navigator.clipboard.writeText(base); showToast('초대 링크 복사 완료!') }
-    catch { prompt('아래 링크를 복사하세요:', base) }
-    if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-share-nodes"></i> 지인 초대 링크 복사' }
-  }
+    finalUrl   = data.link || base
+  } catch { /* bitly 실패 시 원본 URL 사용 */ }
+
+  try { await navigator.clipboard.writeText(finalUrl) } catch { prompt('아래 링크를 복사하세요:', finalUrl) }
+  showToast('초대 링크가 복사되었습니다! 지인에게 공유해 보세요 📎')
+
+  // 버튼 원상 복구
+  allInviteBtns.forEach(b => {
+    b.disabled = false
+    if (b.classList.contains('rl-invite-post-btn')) {
+      b.innerHTML = '<i class="fas fa-link"></i><span>초대 링크 복사하기</span><span class="rl-invite-badge">+1장</span>'
+    } else {
+      b.innerHTML = '<i class="fas fa-share-nodes"></i> 공유'
+    }
+  })
 }
 
 // ── 공유 링크 (bit.ly 단축) ───────────────────────

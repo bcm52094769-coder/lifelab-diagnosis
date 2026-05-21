@@ -1410,6 +1410,573 @@ textarea { resize: vertical; min-height: 80px; line-height: 1.6; }
   pointer-events: none;
 }
 
+/* ══════════════════════════════════════════════════
+   RL-* 프리미엄 룰렛 스타일 (2스크린 리디자인)
+══════════════════════════════════════════════════ */
+
+/* ── 모달 기본 업그레이드 ── */
+.roulette-modal {
+  background: linear-gradient(160deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%);
+  border-radius: 28px;
+  border: 1px solid rgba(255,255,255,.08);
+  box-shadow: 0 32px 80px rgba(0,0,0,.6), 0 0 0 1px rgba(255,255,255,.04);
+}
+
+/* 닫기 버튼 (항상 표시, 프리미엄) */
+.roulette-close {
+  background: rgba(255,255,255,.1);
+  color: rgba(255,255,255,.7);
+  border: 1px solid rgba(255,255,255,.15);
+  backdrop-filter: blur(8px);
+}
+.roulette-close:hover {
+  background: rgba(255,255,255,.2);
+  color: #fff;
+}
+
+/* ── 화면 A: 스핀 화면 헤더 ── */
+.rl-header {
+  text-align: center;
+  padding: 8px 0 16px;
+}
+.rl-sparkles {
+  font-size: 1.6rem;
+  margin-bottom: 6px;
+  animation: rl-float 2.5s ease-in-out infinite;
+}
+@keyframes rl-float {
+  0%,100% { transform: translateY(0); }
+  50%      { transform: translateY(-5px); }
+}
+.rl-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: linear-gradient(135deg, #fbbf24, #f59e0b);
+  color: #1a1000;
+  border-radius: 50px;
+  padding: 5px 16px;
+  font-size: .75rem;
+  font-weight: 800;
+  letter-spacing: .3px;
+  margin-bottom: 10px;
+  box-shadow: 0 2px 12px rgba(251,191,36,.4);
+}
+.rl-title {
+  font-size: 1.4rem;
+  font-weight: 900;
+  color: #fff;
+  margin-bottom: 6px;
+  letter-spacing: -.3px;
+}
+.rl-desc {
+  font-size: .8rem;
+  color: rgba(255,255,255,.55);
+  line-height: 1.6;
+}
+.rl-desc strong { color: #fbbf24; }
+
+/* ── 응모권 카운터 ── */
+.rl-ticket-counter {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(255,255,255,.06);
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: 14px;
+  padding: 10px 18px;
+  margin-top: 10px;
+  backdrop-filter: blur(8px);
+}
+.rl-ticket-icon { font-size: 1.3rem; }
+.rl-ticket-info { text-align: left; }
+.rl-ticket-label {
+  font-size: .68rem;
+  color: rgba(255,255,255,.5);
+  display: block;
+  margin-bottom: 1px;
+}
+.rl-ticket-value {
+  font-size: 1.2rem;
+  font-weight: 900;
+  color: #fbbf24;
+}
+.rl-ticket-plus {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: rgba(34,197,94,.15);
+  border: 1px solid rgba(34,197,94,.3);
+  border-radius: 8px;
+  padding: 4px 8px;
+  color: #4ade80;
+  font-weight: 800;
+  font-size: .85rem;
+  animation: rl-pulse-green 1.5s ease-in-out infinite;
+}
+.rl-ticket-plus small { font-size: .58rem; color: rgba(74,222,128,.7); }
+@keyframes rl-pulse-green {
+  0%,100% { box-shadow: 0 0 0 0 rgba(34,197,94,.2); }
+  50%      { box-shadow: 0 0 0 6px rgba(34,197,94,0); }
+}
+
+/* ── 룰렛 바퀴 컨테이너 ── */
+.rl-wheel-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 14px auto 14px;
+  width: 320px;
+  height: 320px;
+}
+
+/* 포인터 (바늘) */
+.rl-pointer-wrap {
+  position: absolute;
+  top: -4px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.rl-pointer {
+  width: 0;
+  height: 0;
+  border-left: 10px solid transparent;
+  border-right: 10px solid transparent;
+  border-top: 22px solid #ef4444;
+  filter: drop-shadow(0 3px 6px rgba(239,68,68,.6));
+}
+.rl-pointer-shadow {
+  width: 14px;
+  height: 5px;
+  background: radial-gradient(ellipse, rgba(0,0,0,.35), transparent);
+  margin-top: 1px;
+  border-radius: 50%;
+}
+
+/* 외곽 링 */
+.rl-outer-ring {
+  position: relative;
+  width: 310px;
+  height: 310px;
+  border-radius: 50%;
+  background: conic-gradient(
+    #fbbf24 0deg, #f59e0b 45deg,
+    #6366f1 45deg, #4f46e5 90deg,
+    #f97316 90deg, #ea580c 135deg,
+    #10b981 135deg, #059669 180deg,
+    #fbbf24 180deg, #f59e0b 225deg,
+    #6366f1 225deg, #4f46e5 270deg,
+    #f97316 270deg, #ea580c 315deg,
+    #10b981 315deg, #059669 360deg
+  );
+  padding: 6px;
+  box-shadow:
+    0 0 0 3px rgba(255,255,255,.08),
+    0 8px 40px rgba(0,0,0,.5),
+    0 0 60px rgba(99,102,241,.25);
+  animation: rl-ring-glow 3s ease-in-out infinite;
+}
+@keyframes rl-ring-glow {
+  0%,100% { box-shadow: 0 0 0 3px rgba(255,255,255,.08), 0 8px 40px rgba(0,0,0,.5), 0 0 40px rgba(99,102,241,.2); }
+  50%      { box-shadow: 0 0 0 3px rgba(255,255,255,.12), 0 8px 40px rgba(0,0,0,.5), 0 0 60px rgba(251,191,36,.35); }
+}
+
+/* 캔버스 */
+#roulette-canvas {
+  border-radius: 50%;
+  display: block;
+  width: 100%;
+  height: 100%;
+  box-shadow: 0 4px 20px rgba(0,0,0,.4);
+}
+#roulette-canvas.spinning {
+  box-shadow: 0 4px 20px rgba(0,0,0,.4), 0 0 30px rgba(251,191,36,.3);
+}
+
+/* 중심 스핀 버튼 */
+.rl-center-btn {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 70px;
+  height: 70px;
+  border-radius: 50%;
+  border: none;
+  background: linear-gradient(135deg, #fff 0%, #f0f0f0 100%);
+  cursor: pointer;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow:
+    0 0 0 4px rgba(255,255,255,.25),
+    0 6px 24px rgba(0,0,0,.45),
+    inset 0 1px 0 rgba(255,255,255,.8);
+  transition: transform .2s cubic-bezier(.34,1.56,.64,1), box-shadow .2s;
+  font-family: inherit;
+}
+.rl-center-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  color: #1e1b4b;
+  font-weight: 900;
+}
+.rl-center-inner i {
+  font-size: .9rem;
+  color: #4f46e5;
+}
+.rl-center-inner span {
+  font-size: .62rem;
+  font-weight: 900;
+  color: #4f46e5;
+  letter-spacing: .5px;
+}
+.rl-center-btn:hover:not(:disabled) {
+  transform: translate(-50%,-50%) scale(1.1);
+  box-shadow:
+    0 0 0 6px rgba(251,191,36,.3),
+    0 8px 28px rgba(0,0,0,.5),
+    inset 0 1px 0 rgba(255,255,255,.8);
+}
+.rl-center-btn:disabled {
+  opacity: .5;
+  cursor: not-allowed;
+  transform: translate(-50%,-50%);
+}
+
+/* ── 상품 카드 그리드 ── */
+.rl-prize-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+.rl-prize-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(255,255,255,.08);
+  background: rgba(255,255,255,.05);
+  backdrop-filter: blur(6px);
+  transition: transform .2s, background .2s;
+  cursor: default;
+}
+.rl-prize-card:hover { transform: translateY(-2px); background: rgba(255,255,255,.08); }
+.rl-prize-card.gold   { border-color: rgba(251,191,36,.3); background: rgba(251,191,36,.08); }
+.rl-prize-card.silver { border-color: rgba(99,102,241,.3); background: rgba(99,102,241,.08); }
+.rl-prize-card.chicken{ border-color: rgba(249,115,22,.3); background: rgba(249,115,22,.08); }
+.rl-prize-card.coffee { border-color: rgba(16,185,129,.3); background: rgba(16,185,129,.08); }
+.rl-prize-card.gold:hover   { background: rgba(251,191,36,.12); }
+.rl-prize-card.silver:hover { background: rgba(99,102,241,.12); }
+.rl-prize-card.chicken:hover{ background: rgba(249,115,22,.12); }
+.rl-prize-card.coffee:hover { background: rgba(16,185,129,.12); }
+
+.rl-prize-img { flex-shrink: 0; width: 44px; height: 44px; }
+.rl-prize-img svg { display: block; }
+.rl-prize-name {
+  font-size: .75rem;
+  font-weight: 700;
+  color: rgba(255,255,255,.9);
+  line-height: 1.3;
+}
+.rl-prize-cnt {
+  font-size: .65rem;
+  color: rgba(255,255,255,.4);
+  margin-top: 2px;
+}
+
+/* ── 스핀 전 초대 CTA ── */
+.rl-invite-pre {
+  margin-top: 4px;
+}
+.rl-invite-pre-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  background: linear-gradient(135deg, rgba(251,191,36,.12), rgba(245,158,11,.06));
+  border: 1px solid rgba(251,191,36,.25);
+  border-radius: 14px;
+  padding: 12px 14px;
+}
+.rl-invite-pre-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  min-width: 0;
+}
+.rl-invite-pre-badge {
+  flex-shrink: 0;
+  background: linear-gradient(135deg, #fbbf24, #f59e0b);
+  color: #1a1000;
+  font-weight: 900;
+  font-size: .75rem;
+  border-radius: 8px;
+  padding: 4px 8px;
+  white-space: nowrap;
+  box-shadow: 0 2px 8px rgba(251,191,36,.35);
+}
+.rl-invite-pre-title {
+  font-size: .78rem;
+  font-weight: 800;
+  color: #fde68a;
+  margin-bottom: 2px;
+}
+.rl-invite-pre-sub {
+  font-size: .68rem;
+  color: rgba(253,230,138,.6);
+  line-height: 1.4;
+}
+.rl-invite-pre-btn {
+  flex-shrink: 0;
+  background: linear-gradient(135deg, #fbbf24, #f59e0b);
+  color: #1a1000;
+  border: none;
+  border-radius: 10px;
+  padding: 9px 16px;
+  font-size: .8rem;
+  font-weight: 800;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: inherit;
+  white-space: nowrap;
+  box-shadow: 0 4px 14px rgba(251,191,36,.35);
+  transition: transform .2s, box-shadow .2s;
+}
+.rl-invite-pre-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(251,191,36,.5);
+}
+
+/* ── 결과 화면 ── */
+#roulette-screen-result {
+  animation: rl-slide-up .45s cubic-bezier(.34,1.2,.64,1);
+}
+@keyframes rl-slide-up {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* 결과 헤더 */
+.rl-result-header {
+  text-align: center;
+  padding: 4px 0 16px;
+}
+.rl-result-icon-wrap {
+  font-size: 3.5rem;
+  margin-bottom: 8px;
+  display: block;
+  animation: rl-bounce-in .6s cubic-bezier(.34,1.56,.64,1);
+}
+@keyframes rl-bounce-in {
+  from { transform: scale(.3); opacity: 0; }
+  70%  { transform: scale(1.15); }
+  to   { transform: scale(1); opacity: 1; }
+}
+.rl-result-label {
+  font-size: 1.45rem;
+  font-weight: 900;
+  letter-spacing: -.4px;
+  margin-bottom: 6px;
+}
+.rl-result-label.won  { color: #fbbf24; text-shadow: 0 0 20px rgba(251,191,36,.4); }
+.rl-result-label.lost { color: rgba(255,255,255,.5); }
+.rl-result-msg {
+  font-size: .82rem;
+  color: rgba(255,255,255,.5);
+  line-height: 1.6;
+}
+
+/* 결과 응모권 현황 카드 */
+.rl-result-ticket-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: rgba(255,255,255,.06);
+  border: 1px solid rgba(255,255,255,.1);
+  border-radius: 16px;
+  padding: 14px 18px;
+  margin-bottom: 14px;
+  backdrop-filter: blur(8px);
+}
+.rl-rtc-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.rl-rtc-emoji { font-size: 1.6rem; }
+.rl-rtc-label { font-size: .68rem; color: rgba(255,255,255,.45); margin-bottom: 2px; }
+.rl-rtc-value { font-size: 1.5rem; font-weight: 900; color: #fbbf24; }
+.rl-rtc-right { text-align: right; }
+.rl-rtc-date-label { font-size: .62rem; color: rgba(255,255,255,.4); margin-bottom: 2px; }
+.rl-rtc-date { font-size: .85rem; font-weight: 700; color: rgba(255,255,255,.7); }
+
+/* 결과 상품 이미지 영역 */
+.rl-result-prize-area {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
+  padding: 16px;
+  border-radius: 18px;
+  background: rgba(255,255,255,.04);
+  border: 1px solid rgba(255,255,255,.08);
+  min-height: 60px;
+}
+/* 당첨 상품 카드 (결과) */
+.rl-result-prize-won {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+.rl-result-prize-won .rp-svg-wrap {
+  width: 80px; height: 80px;
+}
+.rl-result-prize-won .rp-svg-wrap svg { width: 100%; height: 100%; }
+.rl-result-prize-title {
+  font-size: 1.1rem;
+  font-weight: 900;
+  color: #fbbf24;
+  text-align: center;
+}
+.rl-result-prize-subtitle {
+  font-size: .75rem;
+  color: rgba(255,255,255,.5);
+  text-align: center;
+}
+
+/* 꽝 상태 */
+.rl-result-miss {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  color: rgba(255,255,255,.4);
+}
+.rl-result-miss .rp-miss-icon { font-size: 2.5rem; }
+.rl-result-miss p { font-size: .8rem; text-align: center; line-height: 1.5; }
+
+/* 안내문 */
+.rl-result-notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: .75rem;
+  color: rgba(255,255,255,.4);
+  line-height: 1.6;
+  background: rgba(255,255,255,.04);
+  border-radius: 10px;
+  padding: 10px 12px;
+  margin-bottom: 14px;
+}
+.rl-result-notice i { color: rgba(99,102,241,.6); margin-top: 2px; flex-shrink: 0; }
+
+/* ── 결과 후 초대 CTA ── */
+.rl-invite-post {
+  background: linear-gradient(135deg, rgba(251,191,36,.15), rgba(245,158,11,.08));
+  border: 1.5px solid rgba(251,191,36,.3);
+  border-radius: 18px;
+  padding: 16px;
+  margin-bottom: 12px;
+  text-align: center;
+}
+.rl-invite-post-title {
+  font-size: .95rem;
+  font-weight: 800;
+  color: #fde68a;
+  margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+.rl-invite-fire { font-size: 1.1rem; }
+.rl-invite-post-desc {
+  font-size: .75rem;
+  color: rgba(253,230,138,.6);
+  line-height: 1.6;
+  margin-bottom: 12px;
+}
+.rl-invite-post-btn {
+  width: 100%;
+  padding: 13px 16px;
+  border-radius: 12px;
+  border: none;
+  background: linear-gradient(135deg, #fbbf24, #f59e0b);
+  color: #1a1000;
+  font-size: .9rem;
+  font-weight: 800;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-family: inherit;
+  box-shadow: 0 4px 20px rgba(251,191,36,.4);
+  transition: transform .2s, box-shadow .2s;
+  margin-bottom: 10px;
+}
+.rl-invite-post-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 28px rgba(251,191,36,.55);
+}
+.rl-invite-badge {
+  background: rgba(0,0,0,.2);
+  border-radius: 6px;
+  padding: 2px 7px;
+  font-size: .72rem;
+  font-weight: 900;
+}
+.rl-invite-post-count {
+  font-size: .75rem;
+  color: rgba(253,230,138,.6);
+}
+.rl-invite-post-count strong { color: #fbbf24; font-size: .88rem; }
+
+/* ── 완료 버튼 ── */
+.rl-done-btn {
+  width: 100%;
+  padding: 13px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,.1);
+  background: rgba(255,255,255,.06);
+  color: rgba(255,255,255,.5);
+  font-size: .85rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-family: inherit;
+  transition: background .2s, color .2s;
+}
+.rl-done-btn:hover { background: rgba(255,255,255,.1); color: rgba(255,255,255,.8); }
+
+/* ── 공통 모바일 ── */
+@media (max-width: 420px) {
+  .rl-wheel-container { width: 280px; height: 280px; }
+  .rl-outer-ring { width: 270px; height: 270px; }
+  .rl-center-btn { width: 60px; height: 60px; }
+  .rl-prize-card { padding: 8px 10px; gap: 8px; }
+  .rl-prize-img  { width: 38px; height: 38px; }
+}
+
 /* ── Responsive ────────────────────────────────── */
 @media (max-width: 768px) {
   .hero-inner { grid-template-columns: 1fr; gap: 24px; }
